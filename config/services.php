@@ -41,4 +41,22 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Profile Enrichment Service
+    |--------------------------------------------------------------------------
+    |
+    | Configurações para o serviço de enriquecimento automático de perfis
+    | de usuários através de consulta a endpoints externos.
+    |
+    */
+    'user_enrichment' => [
+        'enabled' => env('USER_ENRICHMENT_ENABLED', false),
+        'url' => env('USER_ENRICHMENT_URL'),
+        'api_key' => env('USER_ENRICHMENT_API_KEY'),
+        'timeout' => env('USER_ENRICHMENT_TIMEOUT', 10),
+        'retry_attempts' => env('USER_ENRICHMENT_RETRY_ATTEMPTS', 2),
+        'cache_ttl' => env('USER_ENRICHMENT_CACHE_TTL', 3600), // 1 hora
+    ],
+
 ];

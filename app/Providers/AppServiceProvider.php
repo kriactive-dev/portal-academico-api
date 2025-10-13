@@ -9,6 +9,9 @@ use App\Services\Library\BookService;
 use App\Services\Library\LibraryService;
 use App\Services\RolePermission\RolePermissionService;
 use App\Services\OAuth\GoogleAuthService;
+use App\Services\User\UserProfileEnrichmentService;
+use App\Models\UserProfile;
+use App\Observers\UserProfileObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GoogleAuthService::class, function () {
             return new GoogleAuthService();
         });
+
+        $this->app->bind(UserProfileEnrichmentService::class, function () {
+            return new UserProfileEnrichmentService();
+        });
     }
 
     /**
@@ -47,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Registrar Observer para UserProfile
+        UserProfile::observe(UserProfileObserver::class);
     }
 }
