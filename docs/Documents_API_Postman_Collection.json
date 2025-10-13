@@ -1,0 +1,407 @@
+{
+	"info": {
+		"_postman_id": "documents-api-collection",
+		"name": "📚 Documents API - Portal Acadêmico",
+		"description": "Collection completa para testar a API de Documentos do Portal Acadêmico",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "📋 Documents CRUD",
+			"item": [
+				{
+					"name": "📄 Listar Documentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents?per_page=10&page=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents"],
+							"query": [
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Filtrar por status ID",
+									"disabled": true
+								},
+								{
+									"key": "user_id",
+									"value": "1",
+									"description": "Filtrar por usuário",
+									"disabled": true
+								},
+								{
+									"key": "due_soon",
+									"value": "true",
+									"description": "Documentos vencendo em breve",
+									"disabled": true
+								},
+								{
+									"key": "overdue",
+									"value": "true",
+									"description": "Documentos vencidos",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "termo",
+									"description": "Buscar por título/descrição",
+									"disabled": true
+								},
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Itens por página"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Página atual"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "➕ Criar Documento",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Documento de Teste - Postman\",\n    \"description\": \"Este documento foi criado através do Postman para testar a API\",\n    \"comments\": \"Comentários iniciais do documento\",\n    \"file_type\": \"PDF\",\n    \"document_status_id\": 1,\n    \"due_date\": \"2025-12-31\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/documents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "👁️ Visualizar Documento",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✏️ Atualizar Documento",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Documento Atualizado via Postman\",\n    \"description\": \"Descrição atualizada do documento\",\n    \"comments\": \"Comentários atualizados\",\n    \"file_type\": \"DOCX\",\n    \"document_status_id\": 2,\n    \"due_date\": \"2025-11-30\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Deletar Documento (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "💥 Deletar Permanentemente",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/force",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "force"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "♻️ Restaurar Documento",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/restore",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "restore"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔄 Status Management",
+			"item": [
+				{
+					"name": "🎛️ Alterar Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"document_status_id\": 3,\n    \"comments\": \"Documento aprovado após revisão\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/change-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "change-status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📊 Documentos por Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/status/{{status_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "status", "{{status_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📎 File Management",
+			"item": [
+				{
+					"name": "📤 Upload Arquivos",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files[]",
+									"type": "file",
+									"src": "/path/to/your/file.pdf"
+								},
+								{
+									"key": "files[]",
+									"type": "file",
+									"src": "/path/to/your/file2.docx",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/files",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "files"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📥 Download Arquivo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/files/{{file_id}}/download",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "files", "{{file_id}}", "download"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Deletar Arquivo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/{{document_id}}/files/{{file_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "{{document_id}}", "files", "{{file_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔍 Search & Stats",
+			"item": [
+				{
+					"name": "🔍 Buscar Documentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/search?query=teste&status=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "teste",
+									"description": "Termo de busca"
+								},
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Filtrar por status",
+									"disabled": true
+								},
+								{
+									"key": "user_id",
+									"value": "1",
+									"description": "Filtrar por usuário",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📈 Estatísticas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/documents/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "documents", "stats"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Adicionar token de autorização automaticamente",
+					"const token = pm.collectionVariables.get('token');",
+					"if (token) {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + token",
+					"    });",
+					"}",
+					"",
+					"// Adicionar headers padrão",
+					"pm.request.headers.add({",
+					"    key: 'Accept',",
+					"    value: 'application/json'",
+					"});",
+					"",
+					"if (pm.request.method !== 'GET' && pm.request.body && pm.request.body.mode === 'raw') {",
+					"    pm.request.headers.add({",
+					"        key: 'Content-Type',",
+					"        value: 'application/json'",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Testes automáticos para todas as requests",
+					"pm.test('Status code is success', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Salvar IDs importantes para usar em outras requests",
+					"if (pm.response.code === 201 || pm.response.code === 200) {",
+					"    const responseJson = pm.response.json();",
+					"    ",
+					"    // Salvar document_id se criado",
+					"    if (responseJson.data && responseJson.data.id) {",
+					"        pm.collectionVariables.set('document_id', responseJson.data.id);",
+					"        console.log('Document ID saved:', responseJson.data.id);",
+					"    }",
+					"    ",
+					"    // Salvar file_id se arquivo foi uploadado",
+					"    if (responseJson.data && responseJson.data.files && responseJson.data.files.length > 0) {",
+					"        pm.collectionVariables.set('file_id', responseJson.data.files[0].id);",
+					"        console.log('File ID saved:', responseJson.data.files[0].id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your-sanctum-token-here",
+			"type": "string"
+		},
+		{
+			"key": "document_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "file_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "status_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

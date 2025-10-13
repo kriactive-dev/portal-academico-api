@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
+use App\Http\Controllers\Api\ChatBot\ChatBotController;
+use App\Http\Controllers\Api\ChatBot\OptionController;
+use App\Http\Controllers\Api\ChatBot\QuestionController;
 use App\Http\Controllers\Api\Library\BookController;
 use App\Http\Controllers\Api\Library\LibraryController;
 use App\Http\Controllers\Api\User\UserController;
@@ -145,4 +148,54 @@ Route::middleware('auth:sanctum')->prefix('roles-permissions')->group(function (
 
     // ===== ESTATÍSTICAS =====
     Route::get('/stats', [RolePermissionController::class, 'getStats']);                        
+});
+
+// Rotas de gerenciamento de documentos (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('documents')->group(function () {
+    // CRUD básico
+    Route::get('/', [App\Http\Controllers\Api\Document\DocumentController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\Document\DocumentController::class, 'store']);
+    Route::get('/stats', [App\Http\Controllers\Api\Document\DocumentController::class, 'stats']);
+    Route::get('/search', [App\Http\Controllers\Api\Document\DocumentController::class, 'search']);
+    Route::get('/{id}', [App\Http\Controllers\Api\Document\DocumentController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Api\Document\DocumentController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\Api\Document\DocumentController::class, 'destroy']);
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [App\Http\Controllers\Api\Document\DocumentController::class, 'restore']);
+    Route::delete('/{id}/force', [App\Http\Controllers\Api\Document\DocumentController::class, 'forceDelete']);
+    Route::patch('/{id}/change-status', [App\Http\Controllers\Api\Document\DocumentController::class, 'changeStatus']);
+    
+    // Gerenciamento de arquivos
+    Route::post('/{id}/files', [App\Http\Controllers\Api\Document\DocumentController::class, 'uploadFiles']);
+    Route::delete('/{id}/files/{fileId}', [App\Http\Controllers\Api\Document\DocumentController::class, 'deleteFile']);
+    Route::get('/{id}/files/{fileId}/download', [App\Http\Controllers\Api\Document\DocumentController::class, 'downloadFile']);
+    
+    // Consultas por status
+    Route::get('/status/{statusId}', [App\Http\Controllers\Api\Document\DocumentController::class, 'getByStatus']);
+});
+
+Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
+
+    Route::get('/questions', [QuestionController::class, 'index']);
+    Route::get('/questions/{id}', [QuestionController::class, 'show']);
+    Route::post('/questions', [QuestionController::class, 'store']);
+    Route::put('/questions/{id}', [QuestionController::class, 'update']);
+    Route::delete('/questions/{id}', [QuestionController::class, 'destroy']);
+
+    Route::get('/options', [OptionController::class, 'index']);
+    Route::get('/options/{id}', [OptionController::class, 'show']);
+    Route::post('/options', [OptionController::class, 'store']);
+    Route::put('/options/{id}', [OptionController::class, 'update']);
+    Route::delete('/options/{id}', [OptionController::class, 'destroy']);
+
+    // Para pegar opções de uma pergunta específica:
+    Route::get('/questions/{id}/options', [OptionController::class, 'indexByQuestion']);
+
+    Route::get('/webhook', [ChatBotController::class, 'getwebhook']);
+
+    Route::post('/webhook', [ChatBotController::class, 'handleWebhook']);
+
+    Route::get('/getallquestions', [QuestionController::class, 'getall']);
+
 });

@@ -1,0 +1,582 @@
+{
+	"info": {
+		"_postman_id": "chatbot-api-collection",
+		"name": "🤖 ChatBot API - Portal Acadêmico",
+		"description": "Collection completa para testar a API de ChatBot do Portal Acadêmico",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "❓ Questions Management",
+			"item": [
+				{
+					"name": "📄 Listar Perguntas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions?per_page=10&page=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Itens por página"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Página atual"
+								},
+								{
+									"key": "search",
+									"value": "termo",
+									"description": "Buscar por texto",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "button",
+									"description": "Filtrar por tipo (text/button)",
+									"disabled": true
+								},
+								{
+									"key": "is_start",
+									"value": "true",
+									"description": "Apenas perguntas iniciais",
+									"disabled": true
+								},
+								{
+									"key": "active",
+									"value": "true",
+									"description": "Apenas perguntas ativas",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "➕ Criar Pergunta",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Olá! Bem-vindo ao Portal Acadêmico. Como posso te ajudar hoje?\",\n    \"type\": \"button\",\n    \"is_start\": true,\n    \"active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "👁️ Visualizar Pergunta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions/{{question_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions", "{{question_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✏️ Atualizar Pergunta",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Olá! Bem-vindo ao Portal Acadêmico. Como posso te ajudar hoje? (Atualizado)\",\n    \"type\": \"button\",\n    \"is_start\": true,\n    \"active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions/{{question_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions", "{{question_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Deletar Pergunta",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions/{{question_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions", "{{question_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔘 Options Management",
+			"item": [
+				{
+					"name": "📄 Listar Opções",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options?per_page=10&page=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Itens por página"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Página atual"
+								},
+								{
+									"key": "question_id",
+									"value": "1",
+									"description": "Filtrar por pergunta",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "termo",
+									"description": "Buscar por texto",
+									"disabled": true
+								},
+								{
+									"key": "is_final",
+									"value": "false",
+									"description": "Apenas opções finais",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "➕ Criar Opção",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_id\": {{question_id}},\n    \"text\": \"Informações sobre cursos\",\n    \"next_question_id\": null,\n    \"is_final\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "👁️ Visualizar Opção",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options/{{option_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options", "{{option_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✏️ Atualizar Opção",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_id\": {{question_id}},\n    \"text\": \"Informações sobre cursos (Atualizado)\",\n    \"next_question_id\": null,\n    \"is_final\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options/{{option_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options", "{{option_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Deletar Opção",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options/{{option_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options", "{{option_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔍 Special Queries",
+			"item": [
+				{
+					"name": "📋 Opções de uma Pergunta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions/{{question_id}}/options",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions", "{{question_id}}", "options"],
+							"query": [
+								{
+									"key": "active_only",
+									"value": "true",
+									"description": "Apenas opções ativas",
+									"disabled": true
+								},
+								{
+									"key": "per_page",
+									"value": "20",
+									"description": "Itens por página",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🌐 Estrutura Completa do ChatBot",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/getallquestions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "getallquestions"],
+							"query": [
+								{
+									"key": "active_only",
+									"value": "true",
+									"description": "Apenas itens ativos",
+									"disabled": true
+								},
+								{
+									"key": "include_inactive",
+									"value": "false",
+									"description": "Incluir inativos",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔗 Webhook Integration",
+			"item": [
+				{
+					"name": "✅ Webhook Verification (GET)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/webhook?hub.mode=subscribe&hub.verify_token={{verify_token}}&hub.challenge=test-challenge",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "webhook"],
+							"query": [
+								{
+									"key": "hub.mode",
+									"value": "subscribe",
+									"description": "Modo de verificação"
+								},
+								{
+									"key": "hub.verify_token",
+									"value": "{{verify_token}}",
+									"description": "Token de verificação"
+								},
+								{
+									"key": "hub.challenge",
+									"value": "test-challenge",
+									"description": "Challenge string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "📨 Webhook Message Handler (POST)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "sha1=signature",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"object\": \"page\",\n    \"entry\": [\n        {\n            \"id\": \"page-id-123\",\n            \"time\": 1625097600000,\n            \"messaging\": [\n                {\n                    \"sender\": {\n                        \"id\": \"user-id-456\"\n                    },\n                    \"recipient\": {\n                        \"id\": \"page-id-123\"\n                    },\n                    \"timestamp\": 1625097600000,\n                    \"message\": {\n                        \"mid\": \"message-id-789\",\n                        \"text\": \"Olá, preciso de ajuda\"\n                    }\n                }\n            ]\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/webhook",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "webhook"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🧪 Test Scenarios",
+			"item": [
+				{
+					"name": "🎯 Cenário 1: Criar Pergunta Inicial",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Olá! Seja bem-vindo(a) ao Portal Acadêmico da {{$randomCompanyName}}. Como posso te ajudar hoje?\",\n    \"type\": \"button\",\n    \"is_start\": true,\n    \"active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🎯 Cenário 2: Criar Opções Principais",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_id\": {{question_id}},\n    \"text\": \"📚 Informações sobre cursos\",\n    \"next_question_id\": null,\n    \"is_final\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🎯 Cenário 3: Criar Pergunta Subsequente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Sobre qual curso você gostaria de saber mais informações?\",\n    \"type\": \"button\",\n    \"is_start\": false,\n    \"active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/questions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "questions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "🎯 Cenário 4: Criar Opção Final",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_id\": {{question_id}},\n    \"text\": \"💬 Falar com um atendente\",\n    \"next_question_id\": null,\n    \"is_final\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/options",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chatbot", "options"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Adicionar token de autorização automaticamente",
+					"const token = pm.collectionVariables.get('token');",
+					"if (token) {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + token",
+					"    });",
+					"}",
+					"",
+					"// Adicionar headers padrão",
+					"pm.request.headers.add({",
+					"    key: 'Accept',",
+					"    value: 'application/json'",
+					"});",
+					"",
+					"if (pm.request.method !== 'GET' && pm.request.body && pm.request.body.mode === 'raw') {",
+					"    pm.request.headers.add({",
+					"        key: 'Content-Type',",
+					"        value: 'application/json'",
+					"    });",
+					"}",
+					"",
+					"// Log da request",
+					"console.log(`🤖 ${pm.request.method} ${pm.request.url}`);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Testes automáticos para todas as requests",
+					"pm.test('Status code is success', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has correct content type', function () {",
+					"    if (pm.response.headers.get('Content-Type')) {",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"    }",
+					"});",
+					"",
+					"// Salvar IDs importantes para usar em outras requests",
+					"if (pm.response.code === 201 || pm.response.code === 200) {",
+					"    try {",
+					"        const responseJson = pm.response.json();",
+					"        ",
+					"        // Salvar question_id se pergunta foi criada/recuperada",
+					"        if (responseJson.data && responseJson.data.id && pm.request.url.toString().includes('/questions')) {",
+					"            pm.collectionVariables.set('question_id', responseJson.data.id);",
+					"            console.log('Question ID saved:', responseJson.data.id);",
+					"        }",
+					"        ",
+					"        // Salvar option_id se opção foi criada/recuperada",
+					"        if (responseJson.data && responseJson.data.id && pm.request.url.toString().includes('/options')) {",
+					"            pm.collectionVariables.set('option_id', responseJson.data.id);",
+					"            console.log('Option ID saved:', responseJson.data.id);",
+					"        }",
+					"        ",
+					"        // Salvar last_question_id da primeira pergunta na lista",
+					"        if (responseJson.data && Array.isArray(responseJson.data) && responseJson.data.length > 0 && pm.request.url.toString().includes('/questions')) {",
+					"            pm.collectionVariables.set('last_question_id', responseJson.data[0].id);",
+					"        }",
+					"    } catch (e) {",
+					"        // Ignorar erros de parsing JSON",
+					"    }",
+					"}",
+					"",
+					"// Log da response",
+					"const responseTime = pm.response.responseTime;",
+					"const statusCode = pm.response.code;",
+					"console.log(`✅ ${statusCode} - ${responseTime}ms`);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your-sanctum-token-here",
+			"type": "string"
+		},
+		{
+			"key": "question_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "option_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "verify_token",
+			"value": "your-webhook-verify-token",
+			"type": "string"
+		}
+	]
+}
