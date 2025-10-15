@@ -24,7 +24,8 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * ===== GERENCIAMENTO DE ROLES =====
+     * ===== GERENCIAMENTO DE ROLES
+     *  =====
      */
 
     /**

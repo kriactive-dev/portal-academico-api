@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
 use App\Http\Controllers\Api\Library\BookController;
 use App\Http\Controllers\Api\Library\LibraryController;
+use App\Http\Controllers\Api\Publication\PublicationController;
 use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\RolePermission\RolePermissionController;
 use Illuminate\Http\Request;
@@ -148,6 +149,31 @@ Route::middleware('auth:sanctum')->prefix('roles-permissions')->group(function (
 
     // ===== ESTATÍSTICAS =====
     Route::get('/stats', [RolePermissionController::class, 'getStats']);                        
+});
+
+// Rotas de gerenciamento de publicações (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('publications')->group(function () {
+    // CRUD básico
+    Route::get('/', [PublicationController::class, 'index']);                    
+    Route::post('/', [PublicationController::class, 'store']);                  
+    Route::get('/stats', [PublicationController::class, 'stats']);              
+    Route::get('/search', [PublicationController::class, 'search']);            
+    Route::get('/{id}', [PublicationController::class, 'show']);                
+    Route::put('/{id}', [PublicationController::class, 'update']);             
+    Route::delete('/{id}', [PublicationController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [PublicationController::class, 'restore']);   
+    Route::delete('/{id}/force', [PublicationController::class, 'forceDelete']); 
+    Route::post('/{id}/duplicate', [PublicationController::class, 'duplicate']); 
+    
+    // Gerenciamento de arquivos
+    Route::post('/{id}/upload', [PublicationController::class, 'uploadFile']);  
+    Route::delete('/{id}/file', [PublicationController::class, 'removeFile']); 
+    Route::get('/{id}/download', [PublicationController::class, 'downloadFile']); 
+    
+    // Consultas por status
+    Route::get('/status/{status}', [PublicationController::class, 'getByStatus']); 
 });
 
 // Rotas de gerenciamento de documentos (protegidas por autenticação)
