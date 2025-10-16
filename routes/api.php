@@ -218,10 +218,10 @@ Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
     // Para pegar opções de uma pergunta específica:
     Route::get('/questions/{id}/options', [OptionController::class, 'indexByQuestion']);
 
+});
+
     Route::get('/webhook', [ChatBotController::class, 'getwebhook']);
 
     Route::post('/webhook', [ChatBotController::class, 'handleWebhook']);
 
     Route::get('/getallquestions', [QuestionController::class, 'getall']);
-
-});

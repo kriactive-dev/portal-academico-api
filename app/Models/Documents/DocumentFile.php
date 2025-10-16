@@ -21,6 +21,7 @@ class DocumentFile extends Model
         'original_name',
         'file_size',
         'mime_type',
+        
     ];
 
     protected $casts = [
