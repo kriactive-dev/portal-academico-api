@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\FirebaseAuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\ChatBot\ChatBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
@@ -27,6 +28,11 @@ Route::prefix('auth')->group(function () {
     Route::get('google/callback', [GoogleAuthController::class, 'callback']);
     Route::get('google/callback-json', [GoogleAuthController::class, 'callbackJson']);
     Route::get('google/user-info', [GoogleAuthController::class, 'getUserInfo']);
+    
+    // Firebase Auth Routes (Públicas)
+    Route::post('firebase/login', [FirebaseAuthController::class, 'loginWithFirebase']);
+    Route::post('firebase/verify-token', [FirebaseAuthController::class, 'verifyToken']);
+    Route::get('firebase/check-email', [FirebaseAuthController::class, 'checkEmail']);
 });
 
 // Rotas protegidas por autenticação
@@ -38,6 +44,12 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     
     // Google OAuth - Rotas protegidas
     Route::post('google/unlink', [GoogleAuthController::class, 'unlink']);
+    
+    // Firebase Auth - Rotas protegidas
+    Route::post('firebase/logout', [FirebaseAuthController::class, 'logout']);
+    Route::post('firebase/revoke-all-tokens', [FirebaseAuthController::class, 'revokeAllTokens']);
+    Route::get('firebase/user-info', [FirebaseAuthController::class, 'getUserInfo']);
+    Route::post('firebase/sync-user', [FirebaseAuthController::class, 'syncUser']);
 });
 
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {
