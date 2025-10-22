@@ -23,6 +23,9 @@ class UpdatePublicationRequest extends FormRequest
             'title' => 'sometimes|required|string|max:255',
             'body' => 'sometimes|required|string|max:65535',
             'expires_at' => 'nullable|date|after:today',
+            'university_name' => 'nullable|string',
+            'year' => 'nullable|string',
+            'university_id' => 'nullable|integer',
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif|max:10240', // 10MB
         ];
     }

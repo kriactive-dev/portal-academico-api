@@ -22,6 +22,10 @@ class StorePublicationRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:65535',
+            'university_name' => 'nullable|string',
+            'year' => 'nullable|string',
+            'university_id' => 'nullable|integer',
+
             'expires_at' => 'nullable|date|after:today',
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif|max:10240', // 10MB
         ];

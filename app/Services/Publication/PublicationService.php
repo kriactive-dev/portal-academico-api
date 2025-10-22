@@ -3,6 +3,7 @@
 namespace App\Services\Publication;
 
 use App\Models\Publication;
+use App\Models\University\University;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +16,20 @@ class PublicationService
     /**
      * Listar publicações com filtros e paginação
      */
+    public function listUniversities(array $filters = []): LengthAwarePaginator
+    {
+        $query = University::orderBy('name', 'asc');
+
+        // Aplicar filtros se necessário
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $perPage = $filters['per_page'] ?? 15;
+
+        return $query->paginate($perPage);
+    }
     public function listPublications(array $filters = []): LengthAwarePaginator
     {
         $query = Publication::with(['creator', 'updater'])

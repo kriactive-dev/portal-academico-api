@@ -19,6 +19,9 @@ class Publication extends Model
         'body',
         'file_path',
         'expires_at',
+        'university_id',
+        'university_name',
+        'year'
     ];
 
     protected $casts = [

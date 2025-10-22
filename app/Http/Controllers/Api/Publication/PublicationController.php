@@ -67,6 +67,40 @@ class PublicationController extends Controller
         }
     }
 
+    public function indexUniversity(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'search', 'title', 'status', 'has_file', 
+                'created_from', 'created_to', 'expires_from', 'expires_to', 
+                'per_page'
+            ]);
+
+            $publications = $this->publicationService->listUniversities($filters);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Universidades recuperadas com sucesso.',
+                'data' => $publications->items(),
+                'pagination' => [
+                    'current_page' => $publications->currentPage(),
+                    'last_page' => $publications->lastPage(),
+                    'per_page' => $publications->perPage(),
+                    'total' => $publications->total(),
+                    'from' => $publications->firstItem(),
+                    'to' => $publications->lastItem(),
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao recuperar publicações.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * @OA\Post(
      *     path="/api/publications",

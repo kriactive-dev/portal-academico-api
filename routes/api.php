@@ -165,6 +165,8 @@ Route::middleware('auth:sanctum')->prefix('roles-permissions')->group(function (
 
 // Rotas de gerenciamento de publicações (protegidas por autenticação)
 Route::middleware('auth:sanctum')->prefix('publications')->group(function () {
+    Route::get('/universities', [PublicationController::class, 'indexUniversity']);      
+
     // CRUD básico
     Route::get('/', [PublicationController::class, 'index']);                    
     Route::post('/', [PublicationController::class, 'store']);                  
@@ -172,7 +174,10 @@ Route::middleware('auth:sanctum')->prefix('publications')->group(function () {
     Route::get('/search', [PublicationController::class, 'search']);            
     Route::get('/{id}', [PublicationController::class, 'show']);                
     Route::put('/{id}', [PublicationController::class, 'update']);             
-    Route::delete('/{id}', [PublicationController::class, 'destroy']);         
+    Route::delete('/{id}', [PublicationController::class, 'destroy']);  
+    
+    
+    
     
     // Ações especiais
     Route::patch('/{id}/restore', [PublicationController::class, 'restore']);   

@@ -14,13 +14,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seed document statuses first
-        $this->call(DocumentStatusSeeder::class);
+        // $this->call(DocumentStatusSeeder::class);
+        
+        // Seed universities
+        $this->call(UniversitySeeder::class);
 
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
     }
 }
