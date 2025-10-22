@@ -632,4 +632,134 @@ class PublicationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/publications/{id}/notification-stats",
+     *     summary="Obter estatísticas de notificação",
+     *     tags={"Publications"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Estatísticas de notificação")
+     * )
+     */
+    public function getNotificationStats(int $id): JsonResponse
+    {
+        try {
+            $publication = $this->publicationService->findPublication($id);
+
+            if (!$publication) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Publicação não encontrada.'
+                ], 404);
+            }
+
+            $stats = $this->publicationService->getNotificationStats($publication);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estatísticas de notificação obtidas com sucesso.',
+                'data' => $stats
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao obter estatísticas de notificação.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/publications/{id}/test-notification",
+     *     summary="Testar envio de notificação",
+     *     tags={"Publications"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="test_email", type="string", format="email")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Teste de notificação enviado")
+     * )
+     */
+    public function testNotification(Request $request, int $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'test_email' => 'required|email'
+            ]);
+
+            $publication = $this->publicationService->findPublication($id);
+
+            if (!$publication) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Publicação não encontrada.'
+                ], 404);
+            }
+
+            $success = $this->publicationService->testNotification($publication, $request->test_email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email de teste enviado com sucesso para ' . $request->test_email,
+                'data' => ['sent' => $success]
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao enviar email de teste.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/publications/{id}/resend-notifications",
+     *     summary="Reenviar notificações",
+     *     tags={"Publications"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Notificações reenviadas")
+     * )
+     */
+    public function resendNotifications(int $id): JsonResponse
+    {
+        try {
+            $publication = $this->publicationService->findPublication($id);
+
+            if (!$publication) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Publicação não encontrada.'
+                ], 404);
+            }
+
+            if (!$publication->university_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Publicação não está associada a uma universidade.'
+                ], 400);
+            }
+
+            $this->publicationService->resendNotifications($publication);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notificações reenviadas com sucesso.'
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao reenviar notificações.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

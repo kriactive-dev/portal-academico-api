@@ -176,9 +176,6 @@ Route::middleware('auth:sanctum')->prefix('publications')->group(function () {
     Route::put('/{id}', [PublicationController::class, 'update']);             
     Route::delete('/{id}', [PublicationController::class, 'destroy']);  
     
-    
-    
-    
     // Ações especiais
     Route::patch('/{id}/restore', [PublicationController::class, 'restore']);   
     Route::delete('/{id}/force', [PublicationController::class, 'forceDelete']); 
@@ -188,6 +185,11 @@ Route::middleware('auth:sanctum')->prefix('publications')->group(function () {
     Route::post('/{id}/upload', [PublicationController::class, 'uploadFile']);  
     Route::delete('/{id}/file', [PublicationController::class, 'removeFile']); 
     Route::get('/{id}/download', [PublicationController::class, 'downloadFile']); 
+    
+    // Gerenciamento de notificações
+    Route::get('/{id}/notification-stats', [PublicationController::class, 'getNotificationStats']); 
+    Route::post('/{id}/test-notification', [PublicationController::class, 'testNotification']); 
+    Route::post('/{id}/resend-notifications', [PublicationController::class, 'resendNotifications']); 
     
     // Consultas por status
     Route::get('/status/{status}', [PublicationController::class, 'getByStatus']); 

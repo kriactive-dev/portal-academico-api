@@ -335,6 +335,20 @@ class FirebaseAuthController extends Controller
             }
 
             $email = $request->input('email');
+            
+            // Validar domínio @ucm.ac.mz
+            if (!str_ends_with(strtolower($email), '@ucm.ac.mz')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Apenas emails com domínio @ucm.ac.mz são permitidos.',
+                    'data' => [
+                        'email' => $email,
+                        'valid_domain' => false,
+                        'allowed_domain' => '@ucm.ac.mz'
+                    ]
+                ], 400);
+            }
+
             $existsInFirebase = $this->firebaseAuthService->userExistsInFirebase($email);
 
             return response()->json([
@@ -342,6 +356,7 @@ class FirebaseAuthController extends Controller
                 'message' => 'Verificação realizada com sucesso.',
                 'data' => [
                     'email' => $email,
+                    'valid_domain' => true,
                     'exists_in_firebase' => $existsInFirebase
                 ]
             ]);

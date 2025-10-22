@@ -4,15 +4,23 @@ namespace App\Services\Publication;
 
 use App\Models\Publication;
 use App\Models\University\University;
+use App\Services\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class PublicationService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Listar publicações com filtros e paginação
      */
@@ -111,6 +119,16 @@ class PublicationService
             $publication = Publication::create($data);
 
             DB::commit();
+
+            // Enviar notificações para usuários relacionados à universidade
+            if ($publication->university_id) {
+                try {
+                    $this->notificationService->notifyUsersAboutNewPublication($publication);
+                } catch (Exception $e) {
+                    // Log do erro mas não falha a criação da publicação
+                    Log::error("Erro ao enviar notificações para publicação {$publication->id}: " . $e->getMessage());
+                }
+            }
 
             return $publication->fresh(['creator', 'updater']);
 
@@ -410,5 +428,31 @@ class PublicationService
         Storage::copy($originalPath, $newPath);
 
         return $newPath;
+    }
+
+    /**
+     * Obter estatísticas de notificação para uma publicação
+     */
+    public function getNotificationStats(Publication $publication): array
+    {
+        return $this->notificationService->getNotificationStats($publication);
+    }
+
+    /**
+     * Testar envio de notificação
+     */
+    public function testNotification(Publication $publication, string $testEmail): bool
+    {
+        return $this->notificationService->testNotification($publication, $testEmail);
+    }
+
+    /**
+     * Reenviar notificações para uma publicação
+     */
+    public function resendNotifications(Publication $publication): void
+    {
+        if ($publication->university_id) {
+            $this->notificationService->notifyUsersAboutNewPublication($publication);
+        }
     }
 }

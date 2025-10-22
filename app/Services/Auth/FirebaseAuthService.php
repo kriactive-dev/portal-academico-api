@@ -95,6 +95,11 @@ class FirebaseAuthService
                 throw new Exception('Email é obrigatório para autenticação');
             }
 
+            // Validar domínio @ucm.ac.mz
+            if (!$this->isValidUcmEmail($firebaseUser['email'])) {
+                throw new Exception('Apenas emails com domínio @ucm.ac.mz são permitidos para acesso ao sistema.');
+            }
+
             // Busca usuário existente
             $user = User::where('email', $firebaseUser['email'])
                        ->orWhere('firebase_uid', $firebaseUser['firebase_uid'])
@@ -349,5 +354,17 @@ class FirebaseAuthService
             Log::error('Erro ao sincronizar usuário com Firebase: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Valida se o email possui domínio @ucm.ac.mz
+     *
+     * @param string $email
+     * @return bool
+     */
+    private function isValidUcmEmail(string $email): bool
+    {
+        $allowedDomain = '@ucm.ac.mz';
+        return str_ends_with(strtolower($email), $allowedDomain);
     }
 }
