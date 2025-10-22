@@ -31,7 +31,10 @@ class CreateBookRequest extends FormRequest
             'launch_date' => 'nullable|string|max:100',
             'launch_place' => 'nullable|string|max:255',
             'library_id' => 'nullable|exists:libraries,id',
-            
+            'description' => 'nullable|string',
+            'publisher' => 'nullable|string',
+            'published_year' => 'nullable|string',
+            'isbn' => 'nullable|string',
             // Arquivos
             'book_file' => 'nullable|file|mimes:pdf,doc,docx,txt|max:50000', // 50MB
             'book_cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5000', // 5MB

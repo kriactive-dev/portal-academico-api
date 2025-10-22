@@ -29,6 +29,10 @@ class UpdateBookRequest extends FormRequest
             'launch_date' => 'sometimes|nullable|string|max:100',
             'launch_place' => 'sometimes|nullable|string|max:255',
             'library_id' => 'sometimes|nullable|exists:libraries,id',
+            'description' => 'nullable|string',
+            'publisher' => 'nullable|string',
+            'published_year' => 'nullable|string',
+            'isbn' => 'nullable|string',
             
             // Arquivos
             'book_file' => 'sometimes|file|mimes:pdf,doc,docx,txt|max:50000', // 50MB
