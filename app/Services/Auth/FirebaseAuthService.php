@@ -116,7 +116,7 @@ class FirebaseAuthService
             DB::commit();
 
             return [
-                'user' => $user->load('profile'),
+                'user' => $user->load(['profile','roles']),
                 'token' => $token,
                 'is_new_user' => $isNewUser,
                 'message' => $isNewUser ? 'Usuário criado e logado com sucesso' : 'Login realizado com sucesso'
