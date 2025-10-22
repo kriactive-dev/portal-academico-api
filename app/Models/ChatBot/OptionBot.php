@@ -32,7 +32,7 @@ class OptionBot extends Model
 
     public function question()
     {
-        return $this->belongsTo(QuestionBot::class);
+        return $this->belongsTo(QuestionBot::class,'question_bot_id');
     }
 
     public function nextQuestion()
