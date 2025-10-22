@@ -162,6 +162,16 @@ class FirebaseAuthService
             $user->save();
         }
 
+        // Verifica e atribui role padrão se o usuário não tiver nenhuma role
+        if ($user->roles()->count() === 0) {
+            try {
+                $user->assignRole('Estudante');
+                Log::info('Role "Estudante" atribuída ao usuário existente ' . $user->id);
+            } catch (Exception $e) {
+                Log::warning('Erro ao atribuir role "Estudante" ao usuário existente ' . $user->id . ': ' . $e->getMessage());
+            }
+        }
+
         // Verifica se precisa enriquecer perfil (apenas para emails @ucm.ac.mz)
         $this->checkAndEnrichProfile($user);
 
@@ -185,6 +195,14 @@ class FirebaseAuthService
         ];
 
         $user = User::create($userData);
+
+        // Atribuir role padrão "Estudante"
+        try {
+            $user->assignRole('Estudante');
+            Log::info('Role "Estudante" atribuída ao usuário ' . $user->id);
+        } catch (Exception $e) {
+            Log::warning('Erro ao atribuir role "Estudante" ao usuário ' . $user->id . ': ' . $e->getMessage());
+        }
 
         // Cria perfil base
         UserProfile::create([
