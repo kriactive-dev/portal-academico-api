@@ -107,6 +107,7 @@ class DocumentService
             $documentData = [
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
+                'document_type_id' => $data['document_type_id'] ?? null,
                 'comments' => $data['comments'] ?? '',
                 'file_type' => $data['file_type'] ?? 'document',
                 'created_by_user_id' => $data['user_id'],
