@@ -23,6 +23,7 @@ class Document extends Model
         'user_id',
         'updated_by_user_id',
         'document_status_id',
+        'document_type_id',
         'due_date',
     ];
 

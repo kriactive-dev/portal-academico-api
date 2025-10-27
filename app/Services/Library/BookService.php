@@ -3,6 +3,7 @@
 namespace App\Services\Library;
 
 use App\Models\Library\Book;
+use App\Models\Library\BookCategory;
 use App\Models\Library\Library;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +14,16 @@ use Illuminate\Http\UploadedFile;
 
 class BookService
 {
+
+    public function indexCategories(): LengthAwarePaginator
+    {
+        $query = BookCategory::query()->withTrashed();
+
+    
+        $perPage = $filters['per_page'] ?? 15;
+        
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
     /**
      * Listar todos os livros com paginação
      */
@@ -72,6 +83,7 @@ class BookService
                 'launch_date' => $data['launch_date'] ?? null,
                 'launch_place' => $data['launch_place'] ?? null,
                 'library_id' => $data['library_id'] ?? null,
+                'book_category_id' => $data['book_category_id'] ?? null,
                 'book_file_path' => '',
                 'book_img_path' => '',
                 'book_cover_path' => '',

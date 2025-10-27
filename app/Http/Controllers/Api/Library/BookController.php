@@ -19,6 +19,26 @@ class BookController extends Controller
         $this->bookService = $bookService;
     }
 
+    public function indexCategories(Request $request): JsonResponse
+    {
+        try {
+            $books_categories = $this->bookService->indexCategories();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Categorias dos Livros obtidos com sucesso.',
+                'data' => $books_categories
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Listar todos os livros
      */

@@ -5,6 +5,7 @@ namespace App\Services\Document;
 use App\Models\Documents\Document;
 use App\Models\Documents\DocumentFile;
 use App\Models\Documents\DocumentStatus;
+use App\Models\Documents\DocumentType;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,6 +15,17 @@ use Illuminate\Support\Str;
 
 class DocumentService
 {
+
+    public function indexTypes(array $filters = []): LengthAwarePaginator
+    {
+        $query = DocumentType::query();
+
+        
+
+        $perPage = $filters['per_page'] ?? 15;
+        
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
     /**
      * Listar documentos com filtros
      */

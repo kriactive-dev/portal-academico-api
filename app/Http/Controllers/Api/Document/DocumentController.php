@@ -20,6 +20,31 @@ class DocumentController extends Controller
         $this->documentService = $documentService;
     }
 
+    public function indexTypes(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'search', 'status_id', 'user_id', 'file_type', 
+                'due_date_filter', 'due_days', 'date_from', 'date_to', 
+                'status', 'per_page'
+            ]);
+
+            $documentsTypes = $this->documentService->indexTypes($filters);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tipos de Documentos listados com sucesso',
+                'data' => $documentsTypes,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao listar documentos: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */

@@ -33,6 +33,7 @@ class UpdateBookRequest extends FormRequest
             'publisher' => 'nullable|string',
             'published_year' => 'nullable|string',
             'isbn' => 'nullable|string',
+            'book_category_id' => 'nullable',
             
             // Arquivos
             'book_file' => 'sometimes|file|mimes:pdf,doc,docx,txt|max:50000', // 50MB

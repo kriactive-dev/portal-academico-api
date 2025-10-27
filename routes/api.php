@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Library\LibraryController;
 use App\Http\Controllers\Api\Publication\PublicationController;
 use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\RolePermission\RolePermissionController;
+use App\Http\Controllers\Api\University\CourseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -75,7 +76,8 @@ Route::middleware('auth:sanctum')->prefix('books')->group(function () {
     // CRUD básico
     Route::get('/', [BookController::class, 'index']);                    
     Route::post('/', [BookController::class, 'store']);                   
-    Route::get('/stats', [BookController::class, 'stats']);             
+    Route::get('/stats', [BookController::class, 'stats']);   
+    Route::get('/categories', [BookController::class, 'indexCategories']);             
     Route::get('/search', [BookController::class, 'search']);           
     Route::get('/{id}', [BookController::class, 'show']);                
     Route::put('/{id}', [BookController::class, 'update']);            
@@ -201,6 +203,7 @@ Route::middleware('auth:sanctum')->prefix('documents')->group(function () {
     Route::get('/', [App\Http\Controllers\Api\Document\DocumentController::class, 'index']);
     Route::post('/', [App\Http\Controllers\Api\Document\DocumentController::class, 'store']);
     Route::get('/stats', [App\Http\Controllers\Api\Document\DocumentController::class, 'stats']);
+    Route::get('/types', [App\Http\Controllers\Api\Document\DocumentController::class, 'indexTypes']);
     Route::get('/search', [App\Http\Controllers\Api\Document\DocumentController::class, 'search']);
     Route::get('/{id}', [App\Http\Controllers\Api\Document\DocumentController::class, 'show']);
     Route::put('/{id}', [App\Http\Controllers\Api\Document\DocumentController::class, 'update']);
@@ -237,6 +240,116 @@ Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
     // Para pegar opções de uma pergunta específica:
     Route::get('/questions/{id}/options', [OptionController::class, 'indexByQuestion']);
 
+});
+
+// Rotas de gerenciamento de cursos (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('courses')->group(function () {
+    // CRUD básico
+    Route::get('/', [CourseController::class, 'index']);                    
+    Route::post('/', [CourseController::class, 'store']);                  
+    Route::get('/stats', [CourseController::class, 'stats']);              
+    Route::get('/search', [CourseController::class, 'search']);            
+    Route::get('/{id}', [CourseController::class, 'show']);                
+    Route::put('/{id}', [CourseController::class, 'update']);             
+    Route::delete('/{id}', [CourseController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [CourseController::class, 'restore']);   
+    Route::delete('/{id}/force', [CourseController::class, 'forceDelete']); 
+    Route::post('/{id}/duplicate', [CourseController::class, 'duplicate']); 
+    
+    // Consultas específicas
+    Route::get('/university/{universityId}', [CourseController::class, 'getByUniversity']); 
+    Route::get('/all/active', [CourseController::class, 'getAllActive']); 
+});
+
+// Rotas de gerenciamento de universidades (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('universities')->group(function () {
+    // CRUD básico
+    Route::get('/', [App\Http\Controllers\University\UniversityController::class, 'index']);                    
+    Route::post('/', [App\Http\Controllers\University\UniversityController::class, 'store']);                  
+    Route::get('/stats', [App\Http\Controllers\University\UniversityController::class, 'stats']);              
+    Route::get('/search', [App\Http\Controllers\University\UniversityController::class, 'search']);            
+    Route::get('/{university}', [App\Http\Controllers\University\UniversityController::class, 'show']);                
+    Route::put('/{university}', [App\Http\Controllers\University\UniversityController::class, 'update']);             
+    Route::delete('/{university}', [App\Http\Controllers\University\UniversityController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [App\Http\Controllers\University\UniversityController::class, 'restore']);   
+    Route::delete('/{id}/force', [App\Http\Controllers\University\UniversityController::class, 'forceDestroy']); 
+    Route::post('/{university}/duplicate', [App\Http\Controllers\University\UniversityController::class, 'duplicate']); 
+    Route::patch('/{university}/toggle-status', [App\Http\Controllers\University\UniversityController::class, 'toggleStatus']); 
+    
+    // Consultas específicas
+    Route::get('/all/active', [App\Http\Controllers\University\UniversityController::class, 'getAllActive']); 
+    Route::get('/all/with-trashed', [App\Http\Controllers\University\UniversityController::class, 'withTrashed']); 
+    
+    // Operações em lote
+    Route::patch('/bulk/status', [App\Http\Controllers\University\UniversityController::class, 'bulkUpdateStatus']); 
+    Route::delete('/bulk/delete', [App\Http\Controllers\University\UniversityController::class, 'bulkDelete']); 
+});
+
+// Rotas de gerenciamento de registros financeiros de estudantes (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('student-financial-records')->group(function () {
+    // CRUD básico
+    Route::get('/', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'index']);                    
+    Route::post('/', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'store']);                  
+    Route::get('/stats', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'stats']);              
+    Route::get('/search', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'search']);            
+    Route::get('/{financialRecord}', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'show']);                
+    Route::put('/{financialRecord}', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'update']);             
+    Route::delete('/{financialRecord}', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'restore']);   
+    Route::delete('/{id}/force', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'forceDestroy']); 
+    Route::post('/{financialRecord}/duplicate', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'duplicate']); 
+    
+    // Consultas específicas por estudante
+    Route::get('/student/{studentId}/records', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'getByStudent']); 
+    Route::get('/student/{studentId}/summary', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'getStudentSummary']); 
+    
+    // Consultas com deletados
+    Route::get('/all/with-trashed', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'withTrashed']); 
+    
+    // Operações em lote
+    Route::patch('/bulk/status', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'bulkUpdateStatus']); 
+    Route::delete('/bulk/delete', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'bulkDelete']); 
+    
+    // Importação Excel
+    Route::post('/import/excel', [App\Http\Controllers\Student\StudentFinancialRecordController::class, 'importExcel']); 
+});
+
+// Rotas de gerenciamento de registros acadêmicos de estudantes (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('student-academic-records')->group(function () {
+    // CRUD básico
+    Route::get('/', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'index']);                    
+    Route::post('/', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'store']);                  
+    Route::get('/stats', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'stats']);              
+    Route::get('/search', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'search']);            
+    Route::get('/{academicRecord}', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'show']);                
+    Route::put('/{academicRecord}', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'update']);             
+    Route::delete('/{academicRecord}', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'restore']);   
+    Route::delete('/{id}/force', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'forceDestroy']); 
+    Route::post('/{academicRecord}/duplicate', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'duplicate']); 
+    
+    // Consultas específicas por estudante
+    Route::get('/student/{studentId}/records', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'getByStudent']); 
+    Route::get('/student/{studentId}/summary', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'getStudentSummary']); 
+    Route::get('/student/{studentId}/transcript', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'getStudentTranscript']); 
+    
+    // Consultas com deletados
+    Route::get('/all/with-trashed', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'withTrashed']); 
+    
+    // Operações em lote
+    Route::patch('/bulk/grade', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'bulkUpdateGrade']); 
+    Route::delete('/bulk/delete', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'bulkDelete']); 
+    
+    // Importação Excel
+    Route::post('/import/excel', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'importExcel']); 
 });
 
     Route::get('/webhook', [ChatBotController::class, 'getwebhook']);

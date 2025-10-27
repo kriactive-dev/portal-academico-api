@@ -27,6 +27,7 @@ class StoreDocumentRequest extends FormRequest
             'comments' => 'nullable|string',
             'file_type' => 'nullable|string|max:50',
             'document_status_id' => 'nullable|integer|exists:document_statuses,id',
+            'document_type_id' => 'nullable|integer|exists:document_types,id',
             'due_date' => 'nullable|date|after_or_equal:today',
             'files' => 'nullable|array',
             'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,zip,rar',

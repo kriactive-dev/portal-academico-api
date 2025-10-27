@@ -17,7 +17,13 @@ class DatabaseSeeder extends Seeder
         // $this->call(DocumentStatusSeeder::class);
         
         // Seed universities
-        $this->call(UniversitySeeder::class);
+        // $this->call(UniversitySeeder::class);
+        
+        // Seed book categories for library
+        $this->call(BookCategorySeeder::class);
+        
+        // Seed document types for academic registry
+        $this->call(DocumentTypeSeeder::class);
 
         // User::factory(10)->create();
 
