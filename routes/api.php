@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\ChatBot\ChatBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
+use App\Http\Controllers\Api\ExternalApp\ExternalAppController;
 use App\Http\Controllers\Api\Library\BookController;
 use App\Http\Controllers\Api\Library\LibraryController;
 use App\Http\Controllers\Api\Publication\PublicationController;
@@ -350,6 +351,24 @@ Route::middleware('auth:sanctum')->prefix('student-academic-records')->group(fun
     
     // Importação Excel
     Route::post('/import/excel', [App\Http\Controllers\Student\StudentAcademicRecordController::class, 'importExcel']); 
+});
+
+// Rotas de gerenciamento de cursos (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
+    // CRUD básico
+    Route::get('/', [ExternalAppController::class, 'index']);                    
+    Route::post('/', [ExternalAppController::class, 'store']);                  
+    Route::get('/stats', [ExternalAppController::class, 'stats']);              
+    Route::get('/search', [ExternalAppController::class, 'search']);            
+    Route::get('/{id}', [ExternalAppController::class, 'show']);                
+    Route::put('/{id}', [ExternalAppController::class, 'update']);             
+    Route::delete('/{id}', [ExternalAppController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [ExternalAppController::class, 'restore']);   
+    Route::delete('/{id}/force', [ExternalAppController::class, 'forceDelete']); 
+    Route::post('/{id}/duplicate', [ExternalAppController::class, 'duplicate']); 
+    
 });
 
     Route::get('/webhook', [ChatBotController::class, 'getwebhook']);
