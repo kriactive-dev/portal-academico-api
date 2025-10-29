@@ -116,7 +116,7 @@ class NotificationService
             try {
                 // Usar queue para não bloquear a resposta
                 // Mail::to('kelvenbragoa@hotmail.com')->send(new NewPublicationNotification($publication, $user, $university));
-                Mail::to($user->email)->cc('kelvenbragoa@hotmail.com','gerson.houane@gmail.com')
+                Mail::to($user->email)->cc(['kelvenbragoa@hotmail.com','gerson.houane@gmail.com'])
                     ->queue(new NewPublicationNotification($publication, $user, $university));
                     
                 Log::debug("Email enfileirado para: {$user->email} sobre publicação: {$publication->title}");
