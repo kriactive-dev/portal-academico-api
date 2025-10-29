@@ -10,9 +10,21 @@ use Exception;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentAcademicRecordImport;
 use Carbon\Carbon;
+use App\Services\Notification\NotificationService;
+use App\Services\Notification\PushNotificationService;
 
 class StudentAcademicRecordService
 {
+
+    protected $firebaseService;
+
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService, PushNotificationService $firebaseService)
+    {
+        $this->notificationService = $notificationService;
+        $this->firebaseService = $firebaseService;
+    }
     /**
      * Get paginated list of academic records with optional filters
      */

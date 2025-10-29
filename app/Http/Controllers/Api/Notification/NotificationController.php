@@ -20,7 +20,7 @@ class NotificationController extends Controller
 
     public function send(Request $request)
     {
-        try {
+        // try {
            $factory = (new Factory)
                 ->withServiceAccount(config('firebase.credentials'))
                 ->withProjectId(config('firebase.project_id'));
@@ -37,10 +37,10 @@ class NotificationController extends Controller
         $messaging->send($message);
 
         return response()->json(['success' => true]);
-    } catch (\Throwable $th) {
-        Log::error('Erro ao enviar notificação: ' . $th->getMessage());
-        return response()->json(['success' => false, 'error' => 'Erro ao enviar notificação: ' . $th->getMessage()], 500);
-    }
+    // } catch (\Throwable $th) {
+    //     Log::error('Erro ao enviar notificação: ' . $th->getMessage());
+    //     return response()->json(['success' => false, 'error' => 'Erro ao enviar notificação: ' . $th->getMessage()], 500);
+    // }
 
     }
 }

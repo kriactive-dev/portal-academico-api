@@ -10,9 +10,21 @@ use Exception;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentFinancialRecordImport;
 use Carbon\Carbon;
+use App\Services\Notification\NotificationService;
+use App\Services\Notification\PushNotificationService;
 
 class StudentFinancialRecordService
 {
+
+    protected $firebaseService;
+
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService, PushNotificationService $firebaseService)
+    {
+        $this->notificationService = $notificationService;
+        $this->firebaseService = $firebaseService;
+    }
     /**
      * Get paginated list of financial records with optional filters
      */

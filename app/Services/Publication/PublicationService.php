@@ -131,6 +131,9 @@ class PublicationService
             $title = 'Uma nova publicação foi criada!';
             $body = 'Por favor aceda a plataforma para mais detalhes.';
 
+            $this->notificationService->notifyUsersAboutNewPublication($publication);
+            $this->firebaseService->sendToDevices($tokens, $title, $body);
+
 
             // Enviar notificações para usuários relacionados à universidade
             if ($publication->university_id) {
