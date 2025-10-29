@@ -2,9 +2,11 @@
 
 namespace App\Services\Publication;
 
+use App\Models\DeviceToken;
 use App\Models\Publication;
 use App\Models\University\University;
 use App\Services\Notification\NotificationService;
+use App\Services\Notification\PushNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,11 +17,15 @@ use Exception;
 
 class PublicationService
 {
+
+    protected $firebaseService;
+
     protected NotificationService $notificationService;
 
-    public function __construct(NotificationService $notificationService)
+    public function __construct(NotificationService $notificationService, PushNotificationService $firebaseService)
     {
         $this->notificationService = $notificationService;
+        $this->firebaseService = $firebaseService;
     }
     /**
      * Listar publicações com filtros e paginação
@@ -120,10 +126,17 @@ class PublicationService
 
             DB::commit();
 
+            $tokens = DeviceToken::pluck('firebase_token')->filter()->toArray();
+            // $token = 'token';
+            $title = 'Uma nova publicação foi criada!';
+            $body = 'Por favor aceda a plataforma para mais detalhes.';
+
+
             // Enviar notificações para usuários relacionados à universidade
             if ($publication->university_id) {
                 try {
                     $this->notificationService->notifyUsersAboutNewPublication($publication);
+                    $this->firebaseService->sendToDevices($tokens, $title, $body);
                 } catch (Exception $e) {
                     // Log do erro mas não falha a criação da publicação
                     Log::error("Erro ao enviar notificações para publicação {$publication->id}: " . $e->getMessage());

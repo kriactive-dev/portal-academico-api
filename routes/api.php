@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\RolePermission\RolePermissionController;
 use App\Http\Controllers\Api\University\CourseController;
 use App\Http\Controllers\Api\Documents\DocumentTypeController;
 use App\Http\Controllers\Api\Library\BookCategoryController;
+use App\Http\Controllers\Api\Notification\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,11 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+
+Route::prefix('notifications')->group(function () {
+    Route::post('push', [NotificationController::class, 'send']);
+    
+});
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
