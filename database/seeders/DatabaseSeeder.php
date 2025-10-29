@@ -14,10 +14,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seed document statuses first
-        // $this->call(DocumentStatusSeeder::class);
+        $this->call(DocumentStatusSeeder::class);
         
         // Seed universities
-        // $this->call(UniversitySeeder::class);
+        $this->call(UniversitySeeder::class);
         
         // Seed book categories for library
         $this->call(BookCategorySeeder::class);
