@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeviceToken;
 use App\Services\Auth\FirebaseAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -368,5 +369,20 @@ class FirebaseAuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function savetoken(Request $request)
+    {
+        $data = $request->all();
+
+        $token = DeviceToken::create([
+            'user_id' => Auth::user()->id,
+            'firebase_token' => $data['firebase_token']
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $token
+        ]);
     }
 }

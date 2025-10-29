@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCM - Web ChatBot Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chat-container {
+            width: 90%;
+            max-width: 450px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .chat-header h2 {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        .chat-header .subtitle {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.bot {
+            text-align: left;
+        }
+        
+        .message.user {
+            text-align: right;
+        }
+        
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .message.bot .message-bubble {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.user .message-bubble {
+            background: #2196f3;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .options-container {
+            margin-top: 10px;
+        }
+        
+        .option-button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px 15px;
+            background: #fff;
+            border: 2px solid #2196f3;
+            border-radius: 20px;
+            color: #2196f3;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .option-button:hover {
+            background: #2196f3;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.9em;
+        }
+        
+        .message-input:focus {
+            border-color: #2196f3;
+        }
+        
+        .send-button {
+            padding: 12px 20px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .send-button:hover {
+            background: #1976d2;
+        }
+        
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        .student-info {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .student-info h4 {
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+        
+        .student-info p {
+            margin: 3px 0;
+            color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>🎓 UCM Assistant</h2>
+            <div class="subtitle">Assistente Virtual da Universidade Católica de Moçambique</div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-bubble">
+                    👋 Olá! Bem-vindo ao assistente virtual da UCM. Como posso ajudá-lo hoje?
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-group">
+                <input type="text" class="message-input" id="messageInput" placeholder="Digite sua mensagem..." disabled>
+                <button class="send-button" id="sendButton" disabled>Enviar</button>
+            </div>
+            <div class="action-buttons">
+                <button class="action-button" id="backButton" onclick="goBack()" disabled>⬅️ Voltar</button>
+                <button class="action-button" id="restartButton" onclick="restartChat()">🔄 Reiniciar</button>
+                <button class="action-button" id="endButton" onclick="endChat()">🔚 Encerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class UCMWebChatBot {
+            constructor() {
+                this.baseUrl = 'http://localhost:8000/api/web-chatbot';
+                this.sessionId = 'ucm_web_session_' + Date.now();
+                this.isLoading = false;
+                this.awaitingStudentCode = false;
+                this.awaitingType = null;
+                
+                this.initializeElements();
+                this.initChat();
+            }
+            
+            initializeElements() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.backButton = document.getElementById('backButton');
+                
+                // Event listeners
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !this.isLoading) {
+                        this.sendMessage();
+                    }
+                });
+                
+                this.sendButton.addEventListener('click', () => {
+                    if (!this.isLoading) {
+                        this.sendMessage();
+                    }
+                });
+            }
+            
+            async initChat() {
+                try {
+                    this.setLoading(true);
+                    
+                    const response = await fetch(`${this.baseUrl}/init`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            user_identifier: 'web_user@ucm.ac.mz'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displayBotMessage(data.data);
+                    } else {
+                        this.displayError('Erro ao inicializar o chat: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.displayError('Erro de conexão. Verifique se o servidor está rodando.');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+            
+            async sendMessage() {
+                const messageText = this.messageInput.value.trim();
+                if (!messageText) return;
+                
+                // Exibir mensagem do usuário
+                this.displayUserMessage(messageText);
+                this.messageInput.value = '';
+                
+                try {
+                    this.setLoading(true);
+                    
+                    const response = await fetch(`${this.baseUrl}/message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            message: messageText
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    this.handleBotResponse(data);
+                    
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.displayError('Erro ao enviar mensagem.');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+            
+            async selectOption(optionValue) {
+                try {
+                    this.setLoading(true);
+                    
+                    const response = await fetch(`${this.baseUrl}/message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            option_value: optionValue
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    this.handleBotResponse(data);
+                    
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.displayError('Erro ao processar opção.');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+            
+            handleBotResponse(data) {
+                if (!data.success) {
+                    this.displayError(data.message);
+                    return;
+                }
+                
+                const responseData = data.data;
+                
+                if (responseData.type === 'awaiting_student_code') {
+                    this.awaitingStudentCode = true;
+                    this.awaitingType = responseData.awaiting_type;
+                    this.displayBotMessage({
+                        question: { text: responseData.message },
+                        options: [],
+                        session_info: { can_go_back: true }
+                    });
+                    this.enableInput();
+                } else if (responseData.type === 'student_info') {
+                    this.awaitingStudentCode = false;
+                    this.displayStudentInfo(responseData);
+                    this.disableInput();
+                } else if (responseData.type === 'conversation_end') {
+                    this.displayBotMessage({
+                        question: { text: responseData.message },
+                        options: [],
+                        session_info: { can_go_back: false }
+                    });
+                    this.disableInput();
+                } else if (responseData.question) {
+                    this.awaitingStudentCode = false;
+                    this.displayBotMessage(responseData);
+                } else {
+                    this.displayError('Resposta inesperada do servidor.');
+                }
+            }
+            
+            displayBotMessage(data) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                
+                let content = `<div class="message-bubble">${data.question.text}</div>`;
+                
+                if (data.options && data.options.length > 0) {
+                    content += '<div class="options-container">';
+                    data.options.forEach(option => {
+                        content += `<button class="option-button" onclick="chatBot.selectOption('${option.value}')">${option.label}</button>`;
+                    });
+                    content += '</div>';
+                    this.disableInput();
+                } else if (this.awaitingStudentCode) {
+                    this.enableInput();
+                } else {
+                    this.disableInput();
+                }
+                
+                messageDiv.innerHTML = content;
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                // Atualizar estado dos botões
+                if (data.session_info) {
+                    this.backButton.disabled = !data.session_info.can_go_back;
+                }
+            }
+            
+            displayUserMessage(text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user';
+                messageDiv.innerHTML = `<div class="message-bubble">${text}</div>`;
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            displayStudentInfo(data) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                
+                const student = data.student;
+                let content = `
+                    <div class="message-bubble">${data.message}</div>
+                    <div class="student-info">
+                        <h4>📋 Informações do Estudante</h4>
+                        <p><strong>Nome:</strong> ${student.name}</p>
+                        <p><strong>Código:</strong> ${student.code}</p>
+                `;
+                
+                if (student.situacao_academica) {
+                    content += `<p><strong>Situação Acadêmica:</strong> ${student.situacao_academica}</p>`;
+                }
+                
+                if (student.situacao_financeira) {
+                    content += `<p><strong>Situação Financeira:</strong> ${student.situacao_financeira}</p>`;
+                }
+                
+                content += '</div>';
+                
+                messageDiv.innerHTML = content;
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            displayError(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                messageDiv.innerHTML = `<div class="message-bubble" style="background: #ffebee; color: #c62828;">❌ ${message}</div>`;
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            displayLoading() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot loading';
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <span class="typing-indicator"></span>
+                        <span class="typing-indicator"></span>
+                        <span class="typing-indicator"></span>
+                        Digitando...
+                    </div>
+                `;
+                messageDiv.id = 'loadingMessage';
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            removeLoading() {
+                const loadingMessage = document.getElementById('loadingMessage');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+            }
+            
+            setLoading(loading) {
+                this.isLoading = loading;
+                
+                if (loading) {
+                    this.displayLoading();
+                    this.sendButton.disabled = true;
+                    this.messageInput.disabled = true;
+                } else {
+                    this.removeLoading();
+                    if (this.awaitingStudentCode) {
+                        this.enableInput();
+                    }
+                }
+            }
+            
+            enableInput() {
+                this.messageInput.disabled = false;
+                this.sendButton.disabled = false;
+                this.messageInput.focus();
+            }
+            
+            disableInput() {
+                this.messageInput.disabled = true;
+                this.sendButton.disabled = true;
+            }
+            
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+        }
+        
+        // Funções globais para botões de ação
+        async function goBack() {
+            try {
+                chatBot.setLoading(true);
+                
+                const response = await fetch(`${chatBot.baseUrl}/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: chatBot.sessionId,
+                        action: 'back'
+                    })
+                });
+                
+                const data = await response.json();
+                chatBot.handleBotResponse(data);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                chatBot.displayError('Erro ao voltar.');
+            } finally {
+                chatBot.setLoading(false);
+            }
+        }
+        
+        async function restartChat() {
+            // Limpar histórico visual
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML = '';
+            
+            // Reinicializar chat
+            chatBot.sessionId = 'ucm_web_session_' + Date.now();
+            await chatBot.initChat();
+        }
+        
+        async function endChat() {
+            try {
+                await fetch(`${chatBot.baseUrl}/end`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: chatBot.sessionId
+                    })
+                });
+                
+                chatBot.displayBotMessage({
+                    question: { text: '👋 Obrigado por usar o assistente da UCM! Tenha um ótimo dia!' },
+                    options: [],
+                    session_info: { can_go_back: false }
+                });
+                
+                chatBot.disableInput();
+                document.getElementById('backButton').disabled = true;
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                chatBot.displayError('Erro ao encerrar chat.');
+            }
+        }
+        
+        // Inicializar chatbot quando a página carregar
+        let chatBot;
+        window.addEventListener('load', () => {
+            chatBot = new UCMWebChatBot();
+        });
+    </script>
+</body>
+</html>

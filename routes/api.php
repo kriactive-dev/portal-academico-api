@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\ChatBot\ChatBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
+use App\Http\Controllers\Api\ChatBot\WebChatBotController;
 use App\Http\Controllers\Api\ExternalApp\ExternalAppController;
 use App\Http\Controllers\Api\Library\BookController;
 use App\Http\Controllers\Api\Library\LibraryController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\Api\Publication\PublicationController;
 use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\RolePermission\RolePermissionController;
 use App\Http\Controllers\Api\University\CourseController;
+use App\Http\Controllers\Api\Documents\DocumentTypeController;
+use App\Http\Controllers\Api\Library\BookCategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +55,8 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::post('firebase/revoke-all-tokens', [FirebaseAuthController::class, 'revokeAllTokens']);
     Route::get('firebase/user-info', [FirebaseAuthController::class, 'getUserInfo']);
     Route::post('firebase/sync-user', [FirebaseAuthController::class, 'syncUser']);
+
+    Route::post('firebase/register-device-token', [FirebaseAuthController::class, 'savetoken']);
 });
 
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {
@@ -224,6 +229,47 @@ Route::middleware('auth:sanctum')->prefix('documents')->group(function () {
     Route::get('/status/{statusId}', [App\Http\Controllers\Api\Document\DocumentController::class, 'getByStatus']);
 });
 
+// Rotas de gerenciamento de tipos de documento (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('document-types')->group(function () {
+    // CRUD básico
+    Route::get('/', [DocumentTypeController::class, 'index']);                    
+    Route::post('/', [DocumentTypeController::class, 'store']);                  
+    Route::get('/all', [DocumentTypeController::class, 'all']);                  
+    Route::get('/stats', [DocumentTypeController::class, 'stats']);              
+    Route::get('/{id}', [DocumentTypeController::class, 'show']);                
+    Route::put('/{id}', [DocumentTypeController::class, 'update']);             
+    Route::delete('/{id}', [DocumentTypeController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [DocumentTypeController::class, 'restore']);   
+    Route::delete('/{id}/force', [DocumentTypeController::class, 'forceDelete']); 
+    
+    // Lixeira
+    Route::get('/trashed/list', [DocumentTypeController::class, 'trashed']);     
+});
+
+// Rotas de gerenciamento de categorias de livros (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('book-categories')->group(function () {
+    // CRUD básico
+    Route::get('/', [BookCategoryController::class, 'index']);                    
+    Route::post('/', [BookCategoryController::class, 'store']);                  
+    Route::get('/all', [BookCategoryController::class, 'all']);                  
+    Route::get('/with-books-count', [BookCategoryController::class, 'withBooksCount']); 
+    Route::get('/most-used', [BookCategoryController::class, 'mostUsed']);       
+    Route::get('/stats', [BookCategoryController::class, 'stats']);              
+    Route::get('/{id}', [BookCategoryController::class, 'show']);                
+    Route::put('/{id}', [BookCategoryController::class, 'update']);             
+    Route::delete('/{id}', [BookCategoryController::class, 'destroy']);         
+    
+    // Ações especiais
+    Route::patch('/{id}/restore', [BookCategoryController::class, 'restore']);   
+    Route::delete('/{id}/force', [BookCategoryController::class, 'forceDelete']); 
+    Route::post('/{id}/duplicate', [BookCategoryController::class, 'duplicate']); 
+    
+    // Lixeira
+    Route::get('/trashed/list', [BookCategoryController::class, 'trashed']);     
+});
+
 Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
 
     Route::get('/questions', [QuestionController::class, 'index']);
@@ -241,6 +287,15 @@ Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
     // Para pegar opções de uma pergunta específica:
     Route::get('/questions/{id}/options', [OptionController::class, 'indexByQuestion']);
 
+});
+
+// Rotas do Web ChatBot (sem autenticação para acesso público)
+Route::prefix('web-chatbot')->group(function () {
+    Route::post('/init', [WebChatBotController::class, 'initChat']);
+    Route::post('/message', [WebChatBotController::class, 'processMessage']);
+    Route::post('/current', [WebChatBotController::class, 'getCurrentQuestion']);
+    Route::post('/end', [WebChatBotController::class, 'endChat']);
+    Route::post('/history', [WebChatBotController::class, 'getChatHistory']);
 });
 
 // Rotas de gerenciamento de cursos (protegidas por autenticação)
@@ -376,3 +431,98 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
     Route::post('/webhook', [ChatBotController::class, 'handleWebhook']);
 
     Route::get('/getallquestions', [QuestionController::class, 'getall']);
+
+// ===== ROTAS DE TESTE (Temporárias) =====
+Route::get('/test/health', function () {
+    return response()->json([
+        'status' => 'API funcionando',
+        'timestamp' => now(),
+        'laravel_version' => app()->version(),
+        'database' => 'conectado'
+    ]);
+});
+
+Route::get('/test/document-types/create', function () {
+    try {
+        $documentType = \App\Models\DocumentType::create([
+            'name' => 'Documento de Teste ' . now()->format('Y-m-d H:i:s'),
+            'created_by_user_id' => 1,
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Documento de teste criado com sucesso',
+            'data' => $documentType
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao criar documento: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+Route::get('/test/document-types/list', function () {
+    try {
+        $documentTypes = \App\Models\DocumentType::all();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Lista de tipos de documento',
+            'data' => $documentTypes,
+            'total' => $documentTypes->count()
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao listar documentos: ' . $e->getMessage()
+        ], 500);
+    }
+});
+Route::get("/test/book-categories/create", function () {
+    try {
+        $category1 = \App\Models\Library\BookCategory::create([
+            "name" => "Ficção Científica",
+            "created_by_user_id" => 1,
+        ]);
+        
+        $category2 = \App\Models\Library\BookCategory::create([
+            "name" => "Romance",
+            "created_by_user_id" => 1,
+        ]);
+        
+        $category3 = \App\Models\Library\BookCategory::create([
+            "name" => "Terror",
+            "created_by_user_id" => 1,
+        ]);
+        
+        return response()->json([
+            "success" => true,
+            "message" => "Categorias de teste criadas com sucesso",
+            "data" => [$category1, $category2, $category3]
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            "success" => false,
+            "message" => "Erro ao criar categorias: " . $e->getMessage()
+        ], 500);
+    }
+});
+
+Route::get("/test/book-categories/list", function () {
+    try {
+        $categories = \App\Models\Library\BookCategory::all();
+        
+        return response()->json([
+            "success" => true,
+            "message" => "Lista de categorias de livros",
+            "data" => $categories,
+            "total" => $categories->count()
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            "success" => false,
+            "message" => "Erro ao listar categorias: " . $e->getMessage()
+        ], 500);
+    }
+});
