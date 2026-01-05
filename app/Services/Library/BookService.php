@@ -17,7 +17,7 @@ class BookService
 
     public function indexCategories(): LengthAwarePaginator
     {
-        $query = BookCategory::query()->withTrashed();
+        $query = BookCategory::query();
 
     
         $perPage = $filters['per_page'] ?? 15;
@@ -29,8 +29,8 @@ class BookService
      */
     public function index(array $filters = []): LengthAwarePaginator
     {
-        $query = Book::with(['library', 'creator', 'updater'])
-            ->withTrashed();
+        $query = Book::with(['library', 'creator', 'updater']);
+            
 
         // Aplicar filtros se fornecidos
         if (isset($filters['search']) && !empty($filters['search'])) {

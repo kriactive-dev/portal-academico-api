@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\RolePermission\RolePermissionController;
 use App\Http\Controllers\Api\University\CourseController;
 use App\Http\Controllers\Api\Documents\DocumentTypeController;
+use App\Http\Controllers\Api\EnvironmentVariable\EnvironmentVariableController;
 use App\Http\Controllers\Api\Library\BookCategoryController;
 use App\Http\Controllers\Api\Notification\NotificationController;
 use Illuminate\Http\Request;
@@ -276,6 +277,24 @@ Route::middleware('auth:sanctum')->prefix('book-categories')->group(function () 
     Route::get('/trashed/list', [BookCategoryController::class, 'trashed']);     
 });
 
+// Rotas de gerenciamento de notificações locais (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    // Listagem e consultas
+    Route::get('/', [NotificationController::class, 'index']);                    
+    Route::get('/unread-count', [NotificationController::class, 'unreadCount']);  
+    
+    // Marcar como lida
+    Route::patch('/{notificationId}/mark-as-read', [NotificationController::class, 'markAsRead']); 
+    Route::patch('/mark-all-as-read', [NotificationController::class, 'markAllAsRead']); 
+    
+    // Envio de notificações
+    Route::post('/send-local', [NotificationController::class, 'sendLocalNotification']); 
+    Route::post('/send-test', [NotificationController::class, 'sendTestNotification']); 
+    
+    // Firebase (existente)
+    Route::post('/send-firebase', [NotificationController::class, 'send']); 
+});
+
 Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
 
     Route::get('/questions', [QuestionController::class, 'index']);
@@ -438,6 +457,11 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
 
     Route::get('/getallquestions', [QuestionController::class, 'getall']);
 
+    Route::get('/situacaoacademica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']);
+
+    Route::get('/situacaofinanceira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']);
+
+
 // ===== ROTAS DE TESTE (Temporárias) =====
 Route::get('/test/health', function () {
     return response()->json([
@@ -515,7 +539,104 @@ Route::get("/test/book-categories/create", function () {
     }
 });
 
-Route::get("/test/book-categories/list", function () {
+Route::get('/test/notifications/create-user', function () {
+    try {
+        // Criar usuário de teste
+        $user = \App\Models\User::create([
+            'name' => 'Usuário Teste Notificação',
+            'email' => 'teste_notif_' . time() . '@exemplo.com',
+            'password' => bcrypt('password'),
+            'created_by_user_id' => 1,
+        ]);
+        
+        // Enviar notificação de boas-vindas
+        $notificationService = new \App\Services\Notification\LocalNotificationService();
+        $notificationService->sendWelcomeNotification($user);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Usuário criado e notificação de boas-vindas enviada',
+            'data' => [
+                'user' => $user,
+                'unread_count' => $notificationService->getUnreadCount($user)
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao criar usuário e notificação: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+Route::get('/test/notifications/send-custom', function () {
+    try {
+        // Pegar um usuário existente
+        $user = \App\Models\User::first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhum usuário encontrado'
+            ], 404);
+        }
+        
+        // Enviar notificação personalizada
+        $notificationService = new \App\Services\Notification\LocalNotificationService();
+        $success = $notificationService->sendToUser(
+            $user,
+            'Teste de Notificação Local',
+            'Esta é uma notificação de teste para verificar o funcionamento do sistema.',
+            'info',
+            '/dashboard',
+            'Ver Dashboard',
+            ['test' => true, 'timestamp' => now()]
+        );
+        
+        return response()->json([
+            'success' => $success,
+            'message' => $success ? 'Notificação enviada com sucesso' : 'Erro ao enviar notificação',
+            'data' => [
+                'user_id' => $user->id,
+                'unread_count' => $notificationService->getUnreadCount($user)
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao enviar notificação: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Rotas de gerenciamento de variáveis de ambiente (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('environment-variables')->group(function () {
+    // CRUD básico
+    Route::get('/', [EnvironmentVariableController::class, 'index']);                   
+    Route::post('/', [EnvironmentVariableController::class, 'store']);                  
+    Route::get('/categories', [EnvironmentVariableController::class, 'categories']);    
+    Route::get('/export', [EnvironmentVariableController::class, 'export']);           
+    Route::post('/import', [EnvironmentVariableController::class, 'import']);          
+    Route::post('/set-value', [EnvironmentVariableController::class, 'setValue']);     
+    Route::get('/{id}', [EnvironmentVariableController::class, 'show']);               
+    Route::put('/{id}', [EnvironmentVariableController::class, 'update']);            
+    Route::delete('/{id}', [EnvironmentVariableController::class, 'destroy']);        
+    
+    // Ações especiais
+    Route::patch('/{id}/toggle-active', [EnvironmentVariableController::class, 'toggleActive']); 
+    
+    // Busca por chave e categoria
+    Route::get('/key/{key}', [EnvironmentVariableController::class, 'getByKey']);       
+    Route::get('/value/{key}', [EnvironmentVariableController::class, 'getValue']);     
+    Route::get('/category/{category}', [EnvironmentVariableController::class, 'byCategory']); 
+    
+    // Endpoint específico para situação acadêmica UCM
+    Route::get('/situacao-academica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']); 
+    Route::get('/situacao-financeira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']); 
+
+});
+
+Route::get("/test/book-categories/create", function () {
     try {
         $categories = \App\Models\Library\BookCategory::all();
         

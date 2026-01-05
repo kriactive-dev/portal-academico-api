@@ -17,8 +17,7 @@ class UserService
      */
     public function index(array $filters = []): LengthAwarePaginator
     {
-        $query = User::with(['profile', 'roles'])
-            ->withTrashed();
+        $query = User::with(['profile', 'roles']);
 
         // Aplicar filtros se fornecidos
         if (isset($filters['search']) && !empty($filters['search'])) {

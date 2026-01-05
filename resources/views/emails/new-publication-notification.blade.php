@@ -213,12 +213,6 @@
                 @endif
                 
                 <div class="publication-meta">
-                    @if($publication->expires_at)
-                    <div class="meta-item">
-                        <strong>⏰ Expira em:</strong> {{ $publication->expires_at->format('d/m/Y') }}
-                    </div>
-                    @endif
-                    
                     <div class="meta-item">
                         <strong>📅 Publicado em:</strong> {{ $publication->created_at->format('d/m/Y') }}
                     </div>

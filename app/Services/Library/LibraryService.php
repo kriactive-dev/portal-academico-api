@@ -17,7 +17,6 @@ class LibraryService
     public function index(array $filters = []): LengthAwarePaginator
     {
         $query = Library::with(['creator', 'books'])
-            ->withTrashed()
             ->withCount('books');
 
         // Aplicar filtros se fornecidos
@@ -249,8 +248,7 @@ class LibraryService
         $library = $this->show($libraryId);
         
         $query = $library->books()
-            ->with(['creator'])
-            ->withTrashed();
+            ->with(['creator']);
 
         // Aplicar filtros
         if (isset($filters['search']) && !empty($filters['search'])) {
