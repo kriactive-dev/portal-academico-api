@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ChatBot\ChatBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
 use App\Http\Controllers\Api\ChatBot\WebChatBotController;
+use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\ExternalApp\ExternalAppController;
 use App\Http\Controllers\Api\Library\BookController;
 use App\Http\Controllers\Api\Library\LibraryController;
@@ -82,6 +83,11 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::patch('/{id}/toggle-status', [UserController::class, 'toggleStatus']); 
     Route::patch('/{id}/reset-password', [UserController::class, 'resetPassword']); 
     Route::patch('/{id}/verify-email', [UserController::class, 'verifyEmail']);
+});
+
+// Rotas de dashboard (protegidas por autenticação)
+Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
+    Route::get('/metrics', [DashboardController::class, 'getMetrics']);
 });
 
 // Rotas de gerenciamento de livros (protegidas por autenticação)
