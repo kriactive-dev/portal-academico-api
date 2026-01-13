@@ -10,7 +10,7 @@ return [
     |
     */
 
-    'credentials' => env('FIREBASE_CREDENTIALS_PATH', storage_path('app/firebase/firebase-credentials.json')),
+    'credentials' => storage_path('app/firebase/firebase-credentials.json'),
     
     'project_id' => env('FIREBASE_PROJECT_ID', 'portalacademico-f09af'),
     
