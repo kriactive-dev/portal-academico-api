@@ -30,6 +30,7 @@ Route::get('/user', function (Request $request) {
 Route::prefix('notifications')->group(function () {
     Route::post('push', [NotificationController::class, 'send']);
     Route::get('diagnose', [NotificationController::class, 'diagnose']);
+    Route::get('test-connection', [NotificationController::class, 'testConnection']);
 });
 
 Route::prefix('auth')->group(function () {

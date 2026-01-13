@@ -98,7 +98,22 @@ class NotificationController extends Controller
             Log::info('Usando credenciais Firebase do caminho: ' . $credentialsPath, [
                 'file_size' => filesize($credentialsPath),
                 'project_id_from_file' => $credentialsJson['project_id'] ?? 'não encontrado',
-                'client_email' => $credentialsJson['client_email'] ?? 'não encontrado'
+                'client_email' => $credentialsJson['client_email'] ?? 'não encontrado',
+                'server_time' => date('c'),
+                'server_timezone' => date_default_timezone_get()
+            ]);
+
+            // Verificação adicional para problemas de tempo
+            $now = time();
+            $jwt_iat = $now;
+            $jwt_exp = $now + 3600; // 1 hora
+            
+            Log::info('JWT timing info', [
+                'current_timestamp' => $now,
+                'jwt_issued_at' => $jwt_iat,
+                'jwt_expires_at' => $jwt_exp,
+                'server_date' => date('Y-m-d H:i:s T'),
+                'utc_date' => gmdate('Y-m-d H:i:s T')
             ]);
 
             $factory = (new Factory)
@@ -125,14 +140,40 @@ class NotificationController extends Controller
             return response()->json(['success' => true, 'message' => 'Notificação enviada com sucesso']);
 
         } catch (\Kreait\Firebase\Exception\Messaging\InvalidMessage $e) {
-            Log::error('Erro Firebase - Mensagem inválida: ' . $e->getMessage(), [
+            $errorMessage = $e->getMessage();
+            
+            // Tratamento específico para invalid_grant
+            if (strpos($errorMessage, 'invalid_grant') !== false) {
+                Log::error('Erro Firebase - invalid_grant detectado', [
+                    'error_message' => $errorMessage,
+                    'server_time' => date('c'),
+                    'server_timezone' => date_default_timezone_get(),
+                    'utc_time' => gmdate('c'),
+                    'timestamp_diff' => time() - strtotime('now'),
+                    'suggested_solution' => 'Verificar sincronização de horário do servidor ou regenerar credenciais',
+                    'project_id' => config('firebase.project_id'),
+                    'credentials_path' => $credentialsPath ?? 'não definido'
+                ]);
+                
+                return response()->json([
+                    'success' => false, 
+                    'error' => 'Erro de autenticação Firebase (invalid_grant). Possíveis causas: horário do servidor dessincronizado ou credenciais inválidas.',
+                    'debug_info' => [
+                        'server_time' => date('c'),
+                        'utc_time' => gmdate('c'),
+                        'suggestion' => 'Verificar sincronização de horário ou regenerar credenciais Firebase'
+                    ]
+                ], 401);
+            }
+            
+            Log::error('Erro Firebase - Mensagem inválida: ' . $errorMessage, [
                 'error_code' => $e->getCode(),
                 'project_id' => config('firebase.project_id'),
                 'credentials_path' => $credentialsPath ?? 'não definido'
             ]);
             return response()->json([
                 'success' => false, 
-                'error' => 'Mensagem inválida: ' . $e->getMessage()
+                'error' => 'Mensagem inválida: ' . $errorMessage
             ], 400);
         } catch (\Kreait\Firebase\Exception\AuthException $e) {
             Log::error('Erro Firebase - Autenticação: ' . $e->getMessage(), [
@@ -264,6 +305,88 @@ class NotificationController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Erro no diagnóstico: ' . $th->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Testa a conectividade Firebase sem enviar notificação
+     */
+    public function testConnection(Request $request)
+    {
+        try {
+            $projectId = config('firebase.project_id');
+            $credentialsPath = config('firebase.credentials');
+            
+            if (!file_exists($credentialsPath)) {
+                $storagePath = storage_path('app/firebase/firebase-credentials.json');
+                if (file_exists($storagePath)) {
+                    $credentialsPath = $storagePath;
+                } else {
+                    $publicPath = public_path('firebase-credentials.json');
+                    if (file_exists($publicPath)) {
+                        $credentialsPath = $publicPath;
+                    } else {
+                        throw new Exception('Arquivo de credenciais Firebase não encontrado');
+                    }
+                }
+            }
+
+            Log::info('Testando conectividade Firebase', [
+                'credentials_path' => $credentialsPath,
+                'project_id' => $projectId,
+                'server_time' => date('c'),
+                'utc_time' => gmdate('c')
+            ]);
+
+            $factory = (new Factory)
+                ->withServiceAccount($credentialsPath)
+                ->withProjectId($projectId);
+
+            // Tenta inicializar o messaging (isso valida as credenciais)
+            $messaging = $factory->createMessaging();
+            
+            // Se chegou até aqui, as credenciais estão OK
+            Log::info('Conectividade Firebase OK - credenciais válidas');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Conectividade Firebase testada com sucesso',
+                'data' => [
+                    'project_id' => $projectId,
+                    'credentials_valid' => true,
+                    'server_time' => date('c'),
+                    'utc_time' => gmdate('c')
+                ]
+            ]);
+
+        } catch (\Kreait\Firebase\Exception\AuthException $e) {
+            Log::error('Erro de autenticação Firebase no teste: ' . $e->getMessage(), [
+                'error_code' => $e->getCode(),
+                'server_time' => date('c'),
+                'utc_time' => gmdate('c')
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro de autenticação Firebase: ' . $e->getMessage(),
+                'debug_info' => [
+                    'server_time' => date('c'),
+                    'utc_time' => gmdate('c'),
+                    'suggestion' => $e->getMessage() === 'invalid_grant' 
+                        ? 'Verificar sincronização de horário ou regenerar credenciais'
+                        : 'Verificar configurações Firebase'
+                ]
+            ], 401);
+        } catch (\Throwable $th) {
+            Log::error('Erro no teste de conectividade Firebase: ' . $th->getMessage(), [
+                'file' => $th->getFile(),
+                'line' => $th->getLine()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro no teste: ' . $th->getMessage()
             ], 500);
         }
     }
