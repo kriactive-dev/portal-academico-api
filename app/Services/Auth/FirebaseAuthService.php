@@ -101,9 +101,7 @@ class FirebaseAuthService
             }
 
             // Busca usuário existente
-            $user = User::where('email', $firebaseUser['email'])
-                       ->orWhere('firebase_uid', $firebaseUser['firebase_uid'])
-                       ->first();
+            $user = User::where('email', $firebaseUser['email'])->first();
 
             if ($user) {
                 // Usuário existe - atualiza informações se necessário
