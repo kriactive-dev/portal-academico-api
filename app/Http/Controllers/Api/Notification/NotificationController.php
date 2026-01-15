@@ -126,7 +126,10 @@ class NotificationController extends Controller
             $title = $request->title;
             $body = $request->body;
 
-            $message = CloudMessage::withTarget('token', $token)
+            // $message = CloudMessage::withTarget('token', $token)
+            //     ->withNotification(Notification::create($title, $body));
+
+            $message = CloudMessage::new()->toToken($token)
                 ->withNotification(Notification::create($title, $body));
 
             $messaging->send($message);
@@ -473,7 +476,10 @@ class NotificationController extends Controller
             $data = $request->data ?? [];
 
             // Cria a mensagem para o tópico
-            $message = CloudMessage::withTarget('topic', $topic)
+            // $message = CloudMessage::withTarget('topic', $topic)
+            //     ->withNotification(Notification::create($title, $body));
+
+            $message = CloudMessage::new()->toTopic($topic)
                 ->withNotification(Notification::create($title, $body));
 
             // Adiciona dados personalizados se fornecidos
