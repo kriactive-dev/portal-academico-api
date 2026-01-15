@@ -114,6 +114,13 @@ class FirebaseAuthService
                 $user = $this->createNewUser($firebaseUser);
                 $isNewUser = true;
             }
+            $studentCode = $this->extractStudentCodeFromEmail($user->email);
+            if ($studentCode) {
+                // Atualizar o código do estudante no perfil, se aplicável
+                if ($user->profile && $user->profile->student_code !== $studentCode) {
+                    $user->profile->update(['student_code' => $studentCode]);
+                }
+            }
 
             // Gera token Sanctum
             $token = $user->createToken('firebase-auth')->plainTextToken;
@@ -366,5 +373,26 @@ class FirebaseAuthService
     {
         $allowedDomain = '@ucm.ac.mz';
         return str_ends_with(strtolower($email), $allowedDomain);
+    }
+
+    private function extractStudentCodeFromEmail(string $email): ?string
+    {
+        if (!$this->isUCMEmail($email)) {
+            return null;
+        }
+
+        $parts = explode('@', $email);
+        $studentCode = $parts[0] ?? null;
+
+        // Validar se o código parece válido (apenas números e/ou letras)
+        if ($studentCode && preg_match('/^[a-zA-Z0-9]+$/', $studentCode)) {
+            return $studentCode;
+        }
+
+        return null;
+    }
+    private function isUCMEmail(string $email): bool
+    {
+        return str_ends_with(strtolower($email), '@ucm.ac.mz');
     }
 }
