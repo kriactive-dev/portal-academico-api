@@ -392,6 +392,167 @@ class NotificationController extends Controller
     }
 
     /**
+     * Envia notificação Firebase para um tópico
+     */
+    public function sendToTopic(Request $request)
+    {
+        try {
+            // Validação dos dados de entrada
+            $request->validate([
+                'topic' => 'required|string|max:255',
+                'title' => 'required|string|max:255',
+                'body' => 'required|string|max:1000',
+                'data' => 'nullable|array',
+            ]);
+
+            // Debug das configurações Firebase
+            $projectId = config('firebase.project_id');
+            Log::info('Firebase Project ID configurado: ' . $projectId);
+            
+            if (empty($projectId)) {
+                throw new Exception('Project ID do Firebase não configurado');
+            }
+
+            // Verifica se o arquivo de credenciais existe
+            $credentialsPath = config('firebase.credentials');
+            Log::info('Caminho inicial das credenciais: ' . $credentialsPath);
+            
+            // Se o caminho não for absoluto, tenta diferentes localizações
+            if (!file_exists($credentialsPath)) {
+                // Tenta na pasta storage/app/firebase/
+                $storagePath = storage_path('app/firebase/firebase-credentials.json');
+                if (file_exists($storagePath)) {
+                    $credentialsPath = $storagePath;
+                } else {
+                    // Tenta na pasta public/
+                    $publicPath = public_path('firebase-credentials.json');
+                    if (file_exists($publicPath)) {
+                        $credentialsPath = $publicPath;
+                    } else {
+                        throw new Exception('Arquivo de credenciais Firebase não encontrado');
+                    }
+                }
+            }
+
+            // Verifica se o arquivo é legível
+            if (!is_readable($credentialsPath)) {
+                throw new Exception('Arquivo de credenciais Firebase não pode ser lido. Verifique as permissões.');
+            }
+
+            // Verifica se o arquivo é um JSON válido
+            $credentialsContent = file_get_contents($credentialsPath);
+            $credentialsJson = json_decode($credentialsContent, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('Arquivo de credenciais Firebase contém JSON inválido: ' . json_last_error_msg());
+            }
+
+            // Verifica se contém as chaves necessárias
+            $requiredKeys = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email'];
+            foreach ($requiredKeys as $key) {
+                if (!isset($credentialsJson[$key])) {
+                    throw new Exception("Arquivo de credenciais Firebase não contém a chave necessária: {$key}");
+                }
+            }
+
+            Log::info('Usando credenciais Firebase do caminho: ' . $credentialsPath, [
+                'file_size' => filesize($credentialsPath),
+                'project_id_from_file' => $credentialsJson['project_id'] ?? 'não encontrado',
+                'client_email' => $credentialsJson['client_email'] ?? 'não encontrado',
+            ]);
+
+            $factory = (new Factory)
+                ->withServiceAccount($credentialsPath)
+                ->withProjectId($projectId);
+
+            $messaging = $factory->createMessaging();
+
+            $topic = $request->topic;
+            $title = $request->title;
+            $body = $request->body;
+            $data = $request->data ?? [];
+
+            // Cria a mensagem para o tópico
+            $message = CloudMessage::withTarget('topic', $topic)
+                ->withNotification(Notification::create($title, $body));
+
+            // Adiciona dados personalizados se fornecidos
+            if (!empty($data)) {
+                $message = $message->withData($data);
+            }
+
+            $messaging->send($message);
+
+            Log::info('Notificação Firebase enviada com sucesso para o tópico', [
+                'topic' => $topic,
+                'title' => $title,
+                'project_id' => $projectId
+            ]);
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Notificação enviada com sucesso para o tópico',
+                'data' => [
+                    'topic' => $topic,
+                    'title' => $title,
+                    'body' => $body
+                ]
+            ]);
+
+        } catch (\Kreait\Firebase\Exception\Messaging\InvalidMessage $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Tratamento específico para invalid_grant
+            if (strpos($errorMessage, 'invalid_grant') !== false) {
+                Log::error('Erro Firebase - invalid_grant detectado', [
+                    'error_message' => $errorMessage,
+                    'server_time' => date('c'),
+                    'server_timezone' => date_default_timezone_get(),
+                    'utc_time' => gmdate('c'),
+                ]);
+                
+                return response()->json([
+                    'success' => false, 
+                    'error' => 'Erro de autenticação Firebase (invalid_grant). Possíveis causas: horário do servidor dessincronizado ou credenciais inválidas.',
+                    'debug_info' => [
+                        'server_time' => date('c'),
+                        'utc_time' => gmdate('c'),
+                    ]
+                ], 401);
+            }
+            
+            Log::error('Erro Firebase - Mensagem inválida para tópico: ' . $errorMessage, [
+                'error_code' => $e->getCode(),
+                'project_id' => config('firebase.project_id'),
+            ]);
+            return response()->json([
+                'success' => false, 
+                'error' => 'Mensagem inválida: ' . $errorMessage
+            ], 400);
+        } catch (\Kreait\Firebase\Exception\AuthException $e) {
+            Log::error('Erro Firebase - Autenticação ao enviar para tópico: ' . $e->getMessage(), [
+                'error_code' => $e->getCode(),
+                'project_id' => config('firebase.project_id'),
+            ]);
+            return response()->json([
+                'success' => false, 
+                'error' => 'Erro de autenticação Firebase: ' . $e->getMessage()
+            ], 401);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao enviar notificação Firebase para tópico: ' . $th->getMessage(), [
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
+                'trace' => $th->getTraceAsString(),
+                'project_id' => config('firebase.project_id'),
+            ]);
+            return response()->json([
+                'success' => false, 
+                'error' => 'Erro interno: ' . $th->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Lista todas as notificações do usuário autenticado
      */
     // public function index(Request $request): JsonResponse
