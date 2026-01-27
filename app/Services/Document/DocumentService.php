@@ -50,7 +50,7 @@ class DocumentService
 
         // Filtro por usuário
         if (isset($filters['created_by_user_id'])) {
-            $query->byUser($filters['created_by_user_id']);
+            $query->byCreatedByUser($filters['created_by_user_id']);
         }
 
         // Filtro por tipo de arquivo

@@ -86,6 +86,11 @@ class Document extends Model
         return $query->where('user_id', $userId);
     }
 
+    public function scopeByCreatedByUser($query, $userId)
+    {
+        return $query->where('created_by_user_id', $userId);
+    }
+
     public function scopeByFileType($query, $fileType)
     {
         return $query->where('file_type', $fileType);

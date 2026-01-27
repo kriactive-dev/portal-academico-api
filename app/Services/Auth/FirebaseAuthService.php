@@ -201,7 +201,8 @@ class FirebaseAuthService
             'email' => $firebaseUser['email'],
             'firebase_uid' => $firebaseUser['firebase_uid'],
             'email_verified_at' => $firebaseUser['email_verified'] ? now() : null,
-            'password' => bcrypt(Str::random(32)), // Senha aleatória - não será usada
+            // 'password' => bcrypt(Str::random(32)), // Senha aleatória - não será usada
+            'password' => bcrypt($this->extractStudentCodeFromEmail($firebaseUser['email'])),
         ];
 
         $user = User::create($userData);
