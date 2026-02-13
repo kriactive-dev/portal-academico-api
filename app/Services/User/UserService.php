@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +13,13 @@ use Illuminate\Validation\ValidationException;
 
 class UserService
 {
+
+    protected NotificationService $notificationService;
+
+    public function __construct()
+    {
+        $this->notificationService = new NotificationService();
+    }
     /**
      * Listar todos os usuários com paginação
      */
@@ -56,6 +64,7 @@ class UserService
         
         try {
             // Criar o usuário
+            $userPassword = $data['password'];
             $userData = [
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -74,6 +83,9 @@ class UserService
             if (isset($data['profile']) && is_array($data['profile'])) {
                 $user->profile->update($data['profile']);
             }
+            
+            // Enviar email de boas-vindas com a senha não-hashada
+            $this->notificationService->sendUserCreatedNotification($user, $userPassword);
 
             DB::commit();
             

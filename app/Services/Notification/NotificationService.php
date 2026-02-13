@@ -3,6 +3,7 @@
 namespace App\Services\Notification;
 
 use App\Mail\NewPublicationNotification;
+use App\Mail\NewUserCreatedNotification;
 use App\Models\Publication;
 use App\Models\User;
 use App\Models\University\University;
@@ -180,6 +181,20 @@ class NotificationService
             
         } catch (Exception $e) {
             Log::error("Erro no teste de notificação: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function sendUserCreatedNotification(User $user, string $password): void
+    {
+        try {
+            // Criar email personalizado (pode ser uma Mailable genérica)
+            Mail::to($user->email)->send(new NewUserCreatedNotification($user, $password));
+            
+            Log::info("Notificação novo user criado enviada para: {$user->email}");
+            
+        } catch (Exception $e) {
+            Log::error("Erro ao enviar notificação novo user criado para {$user->email}: " . $e->getMessage());
             throw $e;
         }
     }
