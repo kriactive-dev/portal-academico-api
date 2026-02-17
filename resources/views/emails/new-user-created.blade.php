@@ -264,7 +264,7 @@
               "
             >
               Precisa de ajuda? Envie-nos um email para<br />
-              <a href="mailto:info@kriative.com.mz" style="color: #1a1a1a; font-weight: 500">info@kriative.com.mz</a>
+              <a href="mailto:info@ac.mz" style="color: #1a1a1a; font-weight: 500">info@ac.mz</a>
             </p>
           </td>
         </tr>
@@ -284,7 +284,7 @@
                 color: #999999;
               "
             >
-              © 2026 Kriative. Todos os direitos reservados.
+              © 2026. Todos os direitos reservados.
             </p>
           </td>
         </tr>

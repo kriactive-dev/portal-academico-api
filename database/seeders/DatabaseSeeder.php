@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
         // Seed document types for academic registry
         $this->call(DocumentTypeSeeder::class);
 
+        // Seed users and roles
+        $this->call(UserSeeder::class);
+
         // User::factory(10)->create();
 
         // User::factory()->create([
