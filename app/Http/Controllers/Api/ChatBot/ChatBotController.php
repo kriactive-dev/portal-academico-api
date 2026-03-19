@@ -171,8 +171,8 @@ class ChatBotController extends Controller
     private function sendWhatsAppListMessage($to, $question)
 {
     try {
-        $token = 'EAAZAcGTkUZCJcBQhVcd7EKEpMMBXUlJxp3k4ZAAGw8AZCWHku8uKjZCB3OdtKnmtavAhsfvRfkdIZBUDevsPO9OcXoTo5uIQNC1ZBSZAApt8hhbISsAlK5MxHuRb6TEkdXFIAWHSvAWu8wNFY0WSxGRS9jMmmZA5xs7GU0IuxIUoZBFOZCQ6cANWGd24x5bGCTa3ZA9gLz99uJ1Q65ico2eGqDGWSbfApzeZBlcdDc0g2doIGSNV4lWtEQUkZB3N6Yf8WSTVPWoCZBULbJ7mOKxPP95K6P7RZBvns0X5fs6UipqaUAZDZD'; // coloque seu token no .env
-        $phone_number_id = '397344770133312'; // coloque seu id no .env
+        $token = 'EAAZAcGTkUZCJcBQ05tZASXsAsUcpflWRA6pBjCE8FIFOM6eHrkQZA4kwgjkolgCguuX7IrqW6YOtCJb9ZBHmSdcEprmxfJS40norbqCDkdXYxOQwCgO1gOahmBJRB4i0EOCzq35C836dmW3nvnfNVQKVRvHUagPIPAe1plLCX6BpmZBVbXBYE7mM0Rg1VFgMROOSPXJsxd4a2ZB1Eo1wA1Un36ZAZA6QHgxATeJfOUV94OfBJ6wL5Uv6Y3eiUQrE54uZAMeZB1vjZBMF2rOoRZCoMZAAmVCpJo'; // coloque seu token no .env
+        $phone_number_id = '1007395539130248'; // coloque seu id no .env
 
         // Monta as opções do menu (até 10 por lista)
         $ids = [];
@@ -295,8 +295,8 @@ class ChatBotController extends Controller
     private function sendWhatsAppMessage($to, $message, $buttons = [])
     {
         try {
-            $token = 'EAAZAcGTkUZCJcBQhVcd7EKEpMMBXUlJxp3k4ZAAGw8AZCWHku8uKjZCB3OdtKnmtavAhsfvRfkdIZBUDevsPO9OcXoTo5uIQNC1ZBSZAApt8hhbISsAlK5MxHuRb6TEkdXFIAWHSvAWu8wNFY0WSxGRS9jMmmZA5xs7GU0IuxIUoZBFOZCQ6cANWGd24x5bGCTa3ZA9gLz99uJ1Q65ico2eGqDGWSbfApzeZBlcdDc0g2doIGSNV4lWtEQUkZB3N6Yf8WSTVPWoCZBULbJ7mOKxPP95K6P7RZBvns0X5fs6UipqaUAZDZD'; // coloque seu token no .env
-            $phone_number_id = '397344770133312'; // coloque seu id no .env
+            $token = 'EAAZAcGTkUZCJcBQ05tZASXsAsUcpflWRA6pBjCE8FIFOM6eHrkQZA4kwgjkolgCguuX7IrqW6YOtCJb9ZBHmSdcEprmxfJS40norbqCDkdXYxOQwCgO1gOahmBJRB4i0EOCzq35C836dmW3nvnfNVQKVRvHUagPIPAe1plLCX6BpmZBVbXBYE7mM0Rg1VFgMROOSPXJsxd4a2ZB1Eo1wA1Un36ZAZA6QHgxATeJfOUV94OfBJ6wL5Uv6Y3eiUQrE54uZAMeZB1vjZBMF2rOoRZCoMZAAmVCpJo'; // coloque seu token no .env
+            $phone_number_id = '1007395539130248'; // coloque seu id no .env
 
             if (count($buttons)) {
                 $buttonPayload = [];
