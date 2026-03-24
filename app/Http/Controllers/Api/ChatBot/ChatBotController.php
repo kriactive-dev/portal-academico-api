@@ -171,7 +171,7 @@ class ChatBotController extends Controller
     private function sendWhatsAppListMessage($to, $question)
 {
     try {
-        $token = 'EAAZAcGTkUZCJcBRP01Bh0T4KY5wvcuh3T2KZBkucf391YUMXTR68zewmOq9GGN1PBVHdYYxStnfk9sYFqlP0G7fRMjjlVvCRjh6sCSJcAk5rViLyWzJg76Fkb4R57Ros7jNweMpfesHbvqJhLNdtkEZCbVJO16Otg29LxZAr2LJ9rtZBGZAMabb51TH1r4e5wb4DKWTlZAVGZCEurzF1eJjyZAXbPCQ5JgS0iAeZBBWw3W2DZCaDqh6sZAn8GuG5oOctzSBqbheG7tLBvPKbhSerSKVYY'; // coloque seu token no .env
+        $token = 'EAAZAcGTkUZCJcBRKpUcakS7W08ciGtAKBT9alcPmd48tq5tJcRnYPN7iRevr7hSVJarkK13j3SoxsmgB5Yy8n5lTpK2ZBnIRhZCtpry7CxVT8w1YwSCCTveEUU8ZC9Ri8jyZA5TCdMV0ekDCgvwwUwJVZCbG42uNB4oJbOxXGovZCSjeW1reSS97hw2zPTtMC2lgjkbsC6q6Nfj05VYZBg1iSlYerDJtZApPgcgK7jUkGsWZBcrJQjJtvZCQW69rQK6FVHdctRjjZAYFV0TzrZAtV0BXma'; // coloque seu token no .env
         $phone_number_id = '1007395539130248'; // coloque seu id no .env
 
         // Monta as opções do menu (até 10 por lista)
@@ -295,7 +295,7 @@ class ChatBotController extends Controller
     private function sendWhatsAppMessage($to, $message, $buttons = [])
     {
         try {
-            $token = 'EAAZAcGTkUZCJcBRP01Bh0T4KY5wvcuh3T2KZBkucf391YUMXTR68zewmOq9GGN1PBVHdYYxStnfk9sYFqlP0G7fRMjjlVvCRjh6sCSJcAk5rViLyWzJg76Fkb4R57Ros7jNweMpfesHbvqJhLNdtkEZCbVJO16Otg29LxZAr2LJ9rtZBGZAMabb51TH1r4e5wb4DKWTlZAVGZCEurzF1eJjyZAXbPCQ5JgS0iAeZBBWw3W2DZCaDqh6sZAn8GuG5oOctzSBqbheG7tLBvPKbhSerSKVYY'; // coloque seu token no .env
+            $token = 'EAAZAcGTkUZCJcBRKpUcakS7W08ciGtAKBT9alcPmd48tq5tJcRnYPN7iRevr7hSVJarkK13j3SoxsmgB5Yy8n5lTpK2ZBnIRhZCtpry7CxVT8w1YwSCCTveEUU8ZC9Ri8jyZA5TCdMV0ekDCgvwwUwJVZCbG42uNB4oJbOxXGovZCSjeW1reSS97hw2zPTtMC2lgjkbsC6q6Nfj05VYZBg1iSlYerDJtZApPgcgK7jUkGsWZBcrJQjJtvZCQW69rQK6FVHdctRjjZAYFV0TzrZAtV0BXma'; // coloque seu token no .env
             $phone_number_id = '1007395539130248'; // coloque seu id no .env
 
             if (count($buttons)) {
