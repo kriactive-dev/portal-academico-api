@@ -60,7 +60,8 @@ class QuestionController extends Controller
 
     public function destroy($id)
     {
-        QuestionBot::destroy($id);
+        $question = QuestionBot::findOrFail($id);
+        $question->delete();
         return response()->json(['success' => true]);
     }
 }
