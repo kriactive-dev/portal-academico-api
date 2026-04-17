@@ -182,7 +182,7 @@ class ChatBotController extends Controller
             $rows[] = [
                 'id' => $option->value,      // payload retornado na resposta
                 'title' => 'Opção ' . $optionIndex,   // obrigatório; descrição completa vai em description
-                'description' => WhatsappHelper::formatRowTitle($option->label),   // exibe o label com limite de chars
+                'description' => WhatsappHelper::formatRowDescription($option->label),   // exibe o label com limite de chars
             ];
             $ids[] = $option->value;
             $optionIndex++;

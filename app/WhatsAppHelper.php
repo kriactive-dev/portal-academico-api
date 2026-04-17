@@ -31,6 +31,15 @@ class WhatsAppHelper
         return $text;
     }
 
+    public static function formatRowDescription($text)
+    {
+        $maxLength = 70;
+        if (mb_strlen($text) > $maxLength) {
+            return mb_substr($text, 0, $maxLength - 3) . '...';
+        }
+        return $text;
+    }
+
     public static function formatButtonTitle($text)
     {
         $text = trim((string) $text);
