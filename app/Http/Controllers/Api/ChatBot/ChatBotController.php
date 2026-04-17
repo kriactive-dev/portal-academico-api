@@ -40,8 +40,8 @@ class ChatBotController extends Controller
                         $this->sendDynamicQuestion($from, $question);
                         $history = Cache::get("question_history_$from", []);
                         $history[] = $question->id;
-                        Cache::put("question_history_$from", $history, now()->addMinutes(10));
-                        Cache::put("current_question_$from", $question->id, now()->addMinutes(10));
+                        Cache::put("question_history_$from", $history, now()->addMinutes(1));
+                        Cache::put("current_question_$from", $question->id, now()->addMinutes(1));
                         return response()->json(['status' => 'start']);
                     } else {
                         $this->sendWhatsAppMessage($from, "Nenhuma pergunta inicial cadastrada.");
@@ -66,13 +66,13 @@ class ChatBotController extends Controller
 
                 // Situação acadêmica
                 if ($payload === 'situacao_academica') {
-                    Cache::put("awaiting_student_code_$from", 'academica', now()->addMinutes(5));
+                    Cache::put("awaiting_student_code_$from", 'academica', now()->addMinutes(1));
                     $this->sendWhatsAppMessage($from, "Situação acadêmica: Insira seu código de estudante para verificar a sua situação acadêmica.");
                     return response()->json(['status' => 'awaiting_student_code_academica']);
                 }
                 // Situação financeira
                 if ($payload === 'situacao_financeira') {
-                    Cache::put("awaiting_student_code_$from", 'financeira', now()->addMinutes(5));
+                    Cache::put("awaiting_student_code_$from", 'financeira', now()->addMinutes(1));
                     $this->sendWhatsAppMessage($from, "Situação financeira: Insira seu código de estudante para verificar a sua situação financeira.");
                     return response()->json(['status' => 'awaiting_student_code_financeira']);
                 }
@@ -84,8 +84,8 @@ class ChatBotController extends Controller
                     if ($previousQuestionId) {
                         $previousQuestion = QuestionBot::with('options')->find($previousQuestionId);
                         $this->sendDynamicQuestion($from, $previousQuestion);
-                        Cache::put("current_question_$from", $previousQuestionId, now()->addMinutes(10));
-                        Cache::put("question_history_$from", $history, now()->addMinutes(10));
+                        Cache::put("current_question_$from", $previousQuestionId, now()->addMinutes(1));
+                        Cache::put("question_history_$from", $history, now()->addMinutes(1));
                     } else {
                         $this->sendWhatsAppMessage($from, "Olá! Digite 'ajuda' para receber opções.");
                         Cache::forget("current_question_$from");
@@ -105,8 +105,8 @@ class ChatBotController extends Controller
                             $this->sendDynamicQuestion($from, $nextQuestion);
                             $history = Cache::get("question_history_$from", []);
                             $history[] = $question->id;
-                            Cache::put("question_history_$from", $history, now()->addMinutes(10));
-                            Cache::put("current_question_$from", $nextQuestion->id, now()->addMinutes(10));
+                            Cache::put("question_history_$from", $history, now()->addMinutes(1));
+                            Cache::put("current_question_$from", $nextQuestion->id, now()->addMinutes(1));
                         } else {
                             $this->sendWhatsAppMessage($from, "Obrigado! Seu atendimento foi finalizado.");
                             Cache::forget("current_question_$from");
@@ -145,8 +145,8 @@ class ChatBotController extends Controller
                             $this->sendDynamicQuestion($from, $nextQuestion);
                             $history = Cache::get("question_history_$from", []);
                             $history[] = $question->id;
-                            Cache::put("question_history_$from", $history, now()->addMinutes(10));
-                            Cache::put("current_question_$from", $nextQuestion->id, now()->addMinutes(10));
+                            Cache::put("question_history_$from", $history, now()->addMinutes(1));
+                            Cache::put("current_question_$from", $nextQuestion->id, now()->addMinutes(1));
                         } else {
                             $this->sendWhatsAppMessage($from, "Obrigado! Seu atendimento foi finalizado.");
                             Cache::forget("current_question_$from");
