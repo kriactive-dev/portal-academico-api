@@ -33,10 +33,17 @@ class WhatsAppHelper
 
     public static function formatButtonTitle($text)
     {
-        $maxLength = 24;
+        $text = trim((string) $text);
+
+        if ($text === '') {
+            return 'Opcao';
+        }
+
+        $maxLength = 20;
         if (mb_strlen($text) > $maxLength) {
             return mb_substr($text, 0, $maxLength - 3) . '...';
         }
+
         return $text;
     }
 }
