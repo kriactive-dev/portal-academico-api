@@ -177,13 +177,15 @@ class ChatBotController extends Controller
         // Monta as opções do menu (até 10 por lista)
         $ids = [];
         $rows = [];
+        $optionIndex = 1;
         foreach ($question->options as $option) {
             $rows[] = [
                 'id' => $option->value,      // payload retornado na resposta
-                // 'title' => WhatsappHelper::formatRowTitle($option->label),   // texto do item da lista
-                'description' => $option->label,         // opcional (ex: explicação)
+                'title' => 'Opção ' . $optionIndex,   // obrigatório; descrição completa vai em description
+                'description' => WhatsappHelper::formatRowTitle($option->label),   // exibe o label com limite de chars
             ];
             $ids[] = $option->value;
+            $optionIndex++;
         }
 
         if (!($question->is_start ?? false) && !in_array('voltar', $ids)) {
