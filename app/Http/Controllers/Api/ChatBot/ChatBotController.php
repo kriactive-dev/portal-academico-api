@@ -180,7 +180,7 @@ class ChatBotController extends Controller
         foreach ($question->options as $option) {
             $rows[] = [
                 'id' => $option->value,      // payload retornado na resposta
-                'title' => WhatsappHelper::formatRowTitle($option->label),   // texto do item da lista
+                // 'title' => WhatsappHelper::formatRowTitle($option->label),   // texto do item da lista
                 'description' => $option->label,         // opcional (ex: explicação)
             ];
             $ids[] = $option->value;
