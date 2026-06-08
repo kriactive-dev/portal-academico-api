@@ -32,10 +32,10 @@ class AuthService
         ]);
 
         try {
-            $user->assignRole('Estudante');
-            Log::info('Role "Estudante" atribuída ao usuário ' . $user->id);
+            $user->assignRole('estudante');
+            Log::info('Role "estudante" atribuída ao usuário ' . $user->id);
         } catch (Exception $e) {
-            Log::warning('Erro ao atribuir role "Estudante" ao usuário ' . $user->id . ': ' . $e->getMessage());
+            Log::warning('Erro ao atribuir role "estudante" ao usuário ' . $user->id . ': ' . $e->getMessage());
         }
 
         // O perfil já é criado automaticamente pelo método boot() do User Model

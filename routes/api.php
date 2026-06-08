@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::post('firebase/sync-user', [FirebaseAuthController::class, 'syncUser']);
 
     Route::post('firebase/register-device-token', [FirebaseAuthController::class, 'savetoken']);
+
+    Route::post('enrich-profile', [AuthController::class, 'enrichProfile']);
 });
 
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {

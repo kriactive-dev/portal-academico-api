@@ -53,10 +53,10 @@ class TestFirebaseUserCreation extends Command
         $user = User::create($userData);
         $this->info("✅ Usuário criado com ID: {$user->id}");
 
-        // Atribuir role padrão "Estudante"
+        // Atribuir role padrão "estudante"
         try {
-            $user->assignRole('Estudante');
-            $this->info("✅ Role 'Estudante' atribuída com sucesso");
+            $user->assignRole('estudante');
+            $this->info("✅ Role 'estudante' atribuída com sucesso");
         } catch (\Exception $e) {
             $this->error("❌ Erro ao atribuir role: " . $e->getMessage());
         }

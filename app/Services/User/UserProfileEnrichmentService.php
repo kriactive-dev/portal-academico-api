@@ -209,11 +209,11 @@ class UserProfileEnrichmentService
 
         // Mapear campos da API UCM para o UserProfile
         $extractedData = [];
-        
-        // Telefone/Contacto
+
         if (!empty($userData['stundentcode'])) {
-            $extractedData['stundent_code'] = $userData['stundentcode'];
+            $extractedData['student_code'] = $userData['stundentcode'];
         }
+
         if (!empty($userData['contacto'])) {
             $extractedData['phone'] = $userData['contacto'];
         }
@@ -221,17 +221,20 @@ class UserProfileEnrichmentService
         if (!empty($userData['nome'])) {
             $extractedData['full_name'] = $userData['nome'];
         }
-        
-        // Endereço/Localização
+
         if (!empty($userData['localidade'])) {
             $extractedData['city'] = $userData['localidade'];
+            $extractedData['locality'] = $userData['localidade'];
         }
-        
+
         if (!empty($userData['provincia'])) {
-            $extractedData['state'] = $userData['provincia'];
+            $extractedData['province'] = $userData['provincia'];
         }
-        
-        // Combinar cidade e província para endereço completo
+
+        if (!empty($userData['provinciacode'])) {
+            $extractedData['province_code'] = $userData['provinciacode'];
+        }
+
         if (!empty($userData['localidade']) && !empty($userData['provincia'])) {
             $extractedData['address'] = $userData['localidade'] . ', ' . $userData['provincia'];
         } elseif (!empty($userData['localidade'])) {
@@ -239,27 +242,52 @@ class UserProfileEnrichmentService
         } elseif (!empty($userData['provincia'])) {
             $extractedData['address'] = $userData['provincia'];
         }
-        
-        // Data de nascimento (converter formato: "18-9-1997" para "1997-09-18")
+
         if (!empty($userData['datanasc'])) {
             $extractedData['date_of_birth'] = $this->convertUCMDateFormat($userData['datanasc']);
         }
-        
-        // Gênero
+
         if (!empty($userData['sexo'])) {
             $extractedData['gender'] = $userData['sexo'];
         }
-        
-        // Informações acadêmicas como profissão/bio
+
         if (!empty($userData['curso'])) {
-            $extractedData['profession'] = 'Estudante - ' . $userData['curso'];
+            $extractedData['course'] = $userData['curso'];
         }
-        
+
         if (!empty($userData['nomeFaculdade'])) {
-            $extractedData['company'] = $userData['nomeFaculdade'];
+            $extractedData['faculdade'] = $userData['nomeFaculdade'];
         }
-        
-        // Bio combinando informações acadêmicas
+
+        if (!empty($userData['unidadeOrganica'])) {
+            $extractedData['unidade_organica'] = $userData['unidadeOrganica'];
+        }
+
+        if (!empty($userData['estado'])) {
+            $extractedData['status'] = $userData['estado'];
+        }
+
+        if (!empty($userData['estadodoplanodeestudo'])) {
+            $extractedData['enrollment_plan_status'] = $userData['estadodoplanodeestudo'];
+        }
+
+        if (!empty($userData['anoDeFrequencia'])) {
+            $extractedData['academic_year'] = (string) $userData['anoDeFrequencia'];
+        }
+
+        if (!empty($userData['nacionalidade'])) {
+            $extractedData['country'] = $userData['nacionalidade'];
+            $extractedData['nationality'] = $userData['nacionalidade'];
+        }
+
+        if (!empty($userData['nomedopai'])) {
+            $extractedData['father_name'] = $userData['nomedopai'];
+        }
+
+        if (!empty($userData['nomedamae'])) {
+            $extractedData['mother_name'] = $userData['nomedamae'];
+        }
+
         $bioInfo = [];
         if (!empty($userData['curso'])) {
             $bioInfo[] = 'Curso: ' . $userData['curso'];
@@ -273,30 +301,9 @@ class UserProfileEnrichmentService
         if (!empty($userData['estado'])) {
             $bioInfo[] = 'Status: ' . $userData['estado'];
         }
-        
+
         if (!empty($bioInfo)) {
             $extractedData['bio'] = implode(' | ', $bioInfo);
-        }
-        
-        // País/Nacionalidade
-        if (!empty($userData['nacionalidade'])) {
-            $extractedData['country'] = $userData['nacionalidade'];
-        }
-
-        if (!empty($userData['nomedopai'])) {
-            $extractedData['father_name'] = $userData['nomedopai'];
-        }
-
-        if (!empty($userData['nomedamae'])) {
-            $extractedData['mother_name'] = $userData['nomedamae'];
-        }
-
-        if (!empty($userData['faculdade'])) {
-            $extractedData['faculdade'] = $userData['faculdade'];
-        }
-
-        if (!empty($userData['unidade_organica'])) {
-            $extractedData['unidade_organica'] = $userData['unidade_organica'];
         }
 
         return !empty($extractedData) ? $extractedData : null;
@@ -351,10 +358,9 @@ class UserProfileEnrichmentService
         try {
             $updatedFields = [];
             
-            // Mapear dados externos para campos do UserProfile (apenas campos existentes na tabela)
             $fieldMapping = [
                 'phone' => 'phone',
-                'address' => 'address', 
+                'address' => 'address',
                 'date_of_birth' => 'date_of_birth',
                 'city' => 'city',
                 'country' => 'country',
@@ -364,8 +370,16 @@ class UserProfileEnrichmentService
                 'full_name' => 'full_name',
                 'father_name' => 'father_name',
                 'mother_name' => 'mother_name',
+                'province' => 'province',
+                'province_code' => 'province_code',
+                'status' => 'status',
+                'enrollment_plan_status' => 'enrollment_plan_status',
                 'faculdade' => 'faculdade',
-                'unidade_organica' => 'unidade_organica'
+                'unidade_organica' => 'unidade_organica',
+                'course' => 'course',
+                'locality' => 'locality',
+                'nationality' => 'nationality',
+                'academic_year' => 'academic_year',
             ];
 
             foreach ($fieldMapping as $externalField => $profileField) {

@@ -19,6 +19,8 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, BlameAble, LogsActivity, HasRoles, SoftDeletes;
 
+    protected $guard_name = 'sanctum';
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logAll();

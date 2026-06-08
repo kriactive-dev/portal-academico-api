@@ -7,19 +7,24 @@ use App\Http\Requests\Api\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Http\Requests\Api\Auth\UpdateProfileRequest;
+use App\Models\UserProfile;
 use App\Services\Auth\AuthService;
+use App\Services\User\UserProfileEnrichmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     //
     protected $authService;
+    protected UserProfileEnrichmentService $enrichmentService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, UserProfileEnrichmentService $enrichmentService)
     {
         $this->authService = $authService;
+        $this->enrichmentService = $enrichmentService;
     }
 
     /**
@@ -170,6 +175,29 @@ public function logout(Request $request): JsonResponse
             ], 500);
         }
     }
+
+    public function enrichProfile(): JsonResponse
+    {
+        try {
+            $userProfile = UserProfile::where('user_id',Auth::user()->id)->first();
+            $this->enrichmentService->enrichProfile($userProfile);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil enriquecido com sucesso.',
+                'data' => $userProfile
+            ], 200);
+
+        }catch (\Exception $e) {
+    
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro interno do servidor.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+    }
+
 
 
 }
