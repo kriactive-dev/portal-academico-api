@@ -58,7 +58,7 @@ class EnvironmentVariableService
 
             // URL do endpoint da UCM
             // $url = "https://esura.ucm.ac.mz/eSURA/campusOnline/getFullResultsByStudentCode/{$codigoEstudante}/{$hash}";
-            $url = "http://172.20.0.123/eSURA/campusOnline/getFullResultsByStudentCode/{$codigoEstudante}/{$hash}";
+            $url = "https://172.20.0.123/eSURA/campusOnline/getFullResultsByStudentCode/{$codigoEstudante}/{$hash}";
             
             Log::info('Fazendo requisição para UCM', [
                 'codigo_estudante' => $codigoEstudante,
