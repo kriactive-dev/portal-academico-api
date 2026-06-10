@@ -54,7 +54,7 @@ return [
         'enabled' => env('USER_ENRICHMENT_ENABLED', false),
         'url' => env('USER_ENRICHMENT_URL'),
         'api_key' => env('USER_ENRICHMENT_API_KEY'),
-        'timeout' => env('USER_ENRICHMENT_TIMEOUT', 10),
+        'timeout' => env('USER_ENRICHMENT_TIMEOUT', 30),
         'retry_attempts' => env('USER_ENRICHMENT_RETRY_ATTEMPTS', 2),
         'cache_ttl' => env('USER_ENRICHMENT_CACHE_TTL', 3600), // 1 hora
     ],

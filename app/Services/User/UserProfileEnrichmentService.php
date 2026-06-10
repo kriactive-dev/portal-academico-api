@@ -122,7 +122,7 @@ class UserProfileEnrichmentService
     {
         $endpointUrl = config('services.user_enrichment.url');
         $apiKey = config('services.user_enrichment.api_key');
-        $timeout = config('services.user_enrichment.timeout', 10);
+        $timeout = config('services.user_enrichment.timeout', 30);
         
         if (empty($endpointUrl)) {
             Log::warning('UserProfile enrichment: Endpoint URL not configured');
@@ -130,12 +130,12 @@ class UserProfileEnrichmentService
         }
 
         try {
-            // Construir URL completa: endpoint/codigo
+            // Construir URL completa: endpoint/codigo da UCM
             $fullUrl = rtrim($endpointUrl, '/') . '/' . $studentCode;
             
             $httpClient = Http::timeout($timeout);
             
-            // Desabilitar verificação SSL em desenvolvimento
+            // Desabilitar verificação SSL em desenvolvimento, 
             if (config('app.env') !== 'production') {
                 $httpClient = $httpClient->withOptions(['verify' => false]);
             }

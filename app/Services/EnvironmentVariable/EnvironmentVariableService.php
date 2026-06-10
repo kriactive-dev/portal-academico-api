@@ -124,7 +124,9 @@ class EnvironmentVariableService
             $hash = md5($chave . $codigoEstudante);
 
             // URL do endpoint da UCM
-            $url = "https://primaveraapi.ucm.ac.mz/api/extracto/{$codigoEstudante}/{$hash}";
+            // $url = "https://primaveraapi.ucm.ac.mz/api/extracto/{$codigoEstudante}/{$hash}";
+            $url = "http://172.20.0.45/api/extracto/{$codigoEstudante}/{$hash}";
+
             
             Log::info('Fazendo requisição para UCM', [
                 'codigo_estudante' => $codigoEstudante,
