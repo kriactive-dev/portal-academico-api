@@ -6,7 +6,8 @@
   "exports": {
     "./types": "./src/types/index.ts",
     "./data": "./src/data/index.ts",
-    "./stores": "./src/stores/index.ts"
+    "./stores": "./src/stores/index.ts",
+    "./lib": "./src/lib/id.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
