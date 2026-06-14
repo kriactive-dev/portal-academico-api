@@ -1,0 +1,45 @@
+import type { Turma } from "../types/turma"
+
+export const turmasSeed: Turma[] = [
+  {
+    id: "tur-1",
+    nome: "Informática - Turma A",
+    cursoId: "cur-1",
+    formadorIds: ["for-1"],
+    estudanteIds: ["est-1", "est-2", "est-9"],
+    turno: "manha",
+    dataInicio: "2025-02-03",
+    estado: "em_curso",
+  },
+  {
+    id: "tur-2",
+    nome: "Contabilidade e Gestão - Turma A",
+    cursoId: "cur-2",
+    formadorIds: ["for-2"],
+    estudanteIds: ["est-3", "est-4"],
+    turno: "tarde",
+    dataInicio: "2025-02-03",
+    estado: "em_curso",
+  },
+  {
+    id: "tur-3",
+    nome: "Eletricidade Industrial - Turma A",
+    cursoId: "cur-3",
+    formadorIds: ["for-3"],
+    estudanteIds: ["est-5", "est-6"],
+    turno: "noite",
+    dataInicio: "2025-08-04",
+    estado: "em_curso",
+  },
+  {
+    id: "tur-4",
+    nome: "Mecânica Automóvel - Turma A",
+    cursoId: "cur-4",
+    formadorIds: ["for-4"],
+    estudanteIds: ["est-7", "est-8"],
+    turno: "manha",
+    dataInicio: "2024-02-05",
+    dataFim: "2025-08-01",
+    estado: "concluida",
+  },
+]
