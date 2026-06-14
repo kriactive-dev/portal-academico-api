@@ -7,6 +7,10 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:admin": "turbo run dev --filter=admin",
+    "dev:portal": "turbo run dev --filter=portal",
+    "admin": "turbo run dev --filter=admin",
+    "portal": "turbo run dev --filter=portal",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types"
