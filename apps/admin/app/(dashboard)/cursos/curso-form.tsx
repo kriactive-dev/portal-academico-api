@@ -25,8 +25,8 @@ import { Textarea } from "@workspace/ui/components/textarea"
 const cursoSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres."),
   descricao: z.string().min(5, "Descreva brevemente o curso."),
-  duracaoMeses: z.coerce.number().int().positive("Indique a duração em meses."),
-  mensalidade: z.coerce.number().positive("Indique o valor da mensalidade."),
+  duracaoMeses: z.number().int().positive("Indique a duração em meses."),
+  mensalidade: z.number().positive("Indique o valor da mensalidade."),
   ativo: z.boolean(),
 })
 
@@ -106,7 +106,14 @@ export function CursoForm({ curso }: CursoFormProps) {
               <FormItem>
                 <FormLabel>Duração (meses)</FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} {...field} />
+                  <Input
+                    type="number"
+                    min={1}
+                    {...field}
+                    onChange={(event) =>
+                      field.onChange(event.target.valueAsNumber)
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,7 +126,15 @@ export function CursoForm({ curso }: CursoFormProps) {
               <FormItem>
                 <FormLabel>Mensalidade (MZN)</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="0.01" {...field} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...field}
+                    onChange={(event) =>
+                      field.onChange(event.target.valueAsNumber)
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
