@@ -110,7 +110,7 @@ class AuthService
         $user = Auth::user();
         
         if ($user) {
-            return $user->load('profile');
+            return $user->load(['profile','roles']);
         }
 
         return null;
