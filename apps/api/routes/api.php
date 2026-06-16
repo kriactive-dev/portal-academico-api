@@ -65,4 +65,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::apiResource('users', UserController::class);
 
     Route::post('import/students', [ImportController::class, 'importStudents']);
+    Route::post('import/trainers', [ImportController::class, 'importTrainers']);
+    Route::post('import/school-classes', [ImportController::class, 'importSchoolClasses']);
+    Route::post('import/courses', [ImportController::class, 'importCourses']);
+    Route::post('import/fees', [ImportController::class, 'importFees']);
+    Route::post('import/payments', [ImportController::class, 'importPayments']);
 });
