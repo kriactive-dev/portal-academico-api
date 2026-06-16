@@ -6,11 +6,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class DenyRequestEntryRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -18,6 +24,9 @@ class DenyRequestEntryRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

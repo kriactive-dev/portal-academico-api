@@ -17,7 +17,7 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login']);
 });
 
-Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me', [AuthController::class, 'me']);
 
@@ -57,7 +57,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::post('requests/{requestEntry}/deny', [RequestEntryController::class, 'deny']);
     Route::patch('requests/{id}/restore', [RequestEntryController::class, 'restore'])->whereNumber('id');
     Route::delete('requests/{id}/force', [RequestEntryController::class, 'forceDelete'])->whereNumber('id');
-    Route::apiResource('requests', RequestEntryController::class);
+    Route::get('requests', [RequestEntryController::class, 'index']);
+    Route::post('requests', [RequestEntryController::class, 'store']);
+    Route::get('requests/{requestEntry}', [RequestEntryController::class, 'show']);
+    Route::put('requests/{requestEntry}', [RequestEntryController::class, 'update']);
+    Route::patch('requests/{requestEntry}', [RequestEntryController::class, 'update']);
+    Route::delete('requests/{requestEntry}', [RequestEntryController::class, 'destroy']);
 
     Route::patch('users/{id}/restore', [UserController::class, 'restore'])->whereNumber('id');
     Route::delete('users/{id}/force', [UserController::class, 'forceDelete'])->whereNumber('id');

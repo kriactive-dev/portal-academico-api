@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class SchoolClassController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = SchoolClass::query();
@@ -32,22 +36,36 @@ class SchoolClassController extends Controller
             $query->where('shift', $request->shift);
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => SchoolClassResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => SchoolClassResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreSchoolClassRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreSchoolClassRequest $request): JsonResponse
     {
         $schoolClass = SchoolClass::create($request->validated());
 
-        if ($request->has('trainerIds')) {
-            $schoolClass->trainers()->sync($request->trainerIds);
+        $trainerIds = $request->input('trainer_ids') ?? $request->input('trainerIds');
+        if ($trainerIds) {
+            $schoolClass->trainers()->sync($trainerIds);
         }
 
-        if ($request->has('studentIds')) {
-            $schoolClass->students()->sync($request->studentIds);
+        $studentIds = $request->input('student_ids') ?? $request->input('studentIds');
+        if ($studentIds) {
+            $schoolClass->students()->sync($studentIds);
         }
 
         return response()->json([
@@ -57,6 +75,10 @@ class SchoolClassController extends Controller
         ], 201);
     }
 
+    /**
+     * @param SchoolClass $schoolClass
+     * @return JsonResponse
+     */
     public function show(SchoolClass $schoolClass): JsonResponse
     {
         return response()->json([
@@ -65,16 +87,23 @@ class SchoolClassController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateSchoolClassRequest $request
+     * @param SchoolClass $schoolClass
+     * @return JsonResponse
+     */
     public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass): JsonResponse
     {
         $schoolClass->update($request->validated());
 
-        if ($request->has('trainerIds')) {
-            $schoolClass->trainers()->sync($request->trainerIds);
+        $trainerIds = $request->input('trainer_ids') ?? $request->input('trainerIds');
+        if ($trainerIds) {
+            $schoolClass->trainers()->sync($trainerIds);
         }
 
-        if ($request->has('studentIds')) {
-            $schoolClass->students()->sync($request->studentIds);
+        $studentIds = $request->input('student_ids') ?? $request->input('studentIds');
+        if ($studentIds) {
+            $schoolClass->students()->sync($studentIds);
         }
 
         return response()->json([
@@ -84,6 +113,10 @@ class SchoolClassController extends Controller
         ]);
     }
 
+    /**
+     * @param SchoolClass $schoolClass
+     * @return JsonResponse
+     */
     public function destroy(SchoolClass $schoolClass): JsonResponse
     {
         $schoolClass->delete();
@@ -94,6 +127,10 @@ class SchoolClassController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);
@@ -106,6 +143,10 @@ class SchoolClassController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);

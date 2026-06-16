@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('fees', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('type', ['enrollment', 'registration', 'exam', 'certificate', 'other']);
+            $table->enum('type', ['enrollment', 'registration', 'exam', 'certificate', 'other', 'monthly']);
             $table->decimal('amount', 10, 2);
             $table->foreignId('course_id')->nullable()->constrained('courses')->nullOnDelete();
             $table->boolean('is_active')->default(true);

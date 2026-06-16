@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Course::query();
@@ -24,15 +28,26 @@ class CourseController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
+        $courses = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => CourseResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => CourseResource::collection($courses),
+            'meta' => [
+                'current_page' => $courses->currentPage(),
+                'last_page' => $courses->lastPage(),
+                'per_page' => $courses->perPage(),
+                'total' => $courses->total(),
+            ],
         ]);
     }
 
+    /**
+     * @return JsonResponse
+     */
     public function allActive(): JsonResponse
     {
-        $courses = Course::where('is_active', true)->get(['id', 'name']);
+        $courses = Course::where('is_active', true)->get(['id', 'name', 'is_active']);
 
         return response()->json([
             'success' => true,
@@ -40,6 +55,10 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param StoreCourseRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreCourseRequest $request): JsonResponse
     {
         $course = Course::create($request->validated());
@@ -51,6 +70,10 @@ class CourseController extends Controller
         ], 201);
     }
 
+    /**
+     * @param Course $course
+     * @return JsonResponse
+     */
     public function show(Course $course): JsonResponse
     {
         return response()->json([
@@ -59,6 +82,11 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateCourseRequest $request
+     * @param Course $course
+     * @return JsonResponse
+     */
     public function update(UpdateCourseRequest $request, Course $course): JsonResponse
     {
         $course->update($request->validated());
@@ -70,6 +98,10 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param Course $course
+     * @return JsonResponse
+     */
     public function destroy(Course $course): JsonResponse
     {
         $course->delete();
@@ -80,6 +112,10 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $course = Course::onlyTrashed()->findOrFail($id);
@@ -92,6 +128,10 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $course = Course::onlyTrashed()->findOrFail($id);
@@ -103,6 +143,10 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * @param Course $course
+     * @return JsonResponse
+     */
     public function duplicate(Course $course): JsonResponse
     {
         $newCourse = $course->replicate();

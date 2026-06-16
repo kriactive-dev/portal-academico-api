@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Student::query();
@@ -29,12 +33,24 @@ class StudentController extends Controller
             $query->where('status', $request->status);
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => StudentResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => StudentResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreStudentRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreStudentRequest $request): JsonResponse
     {
         $student = Student::create($request->validated());
@@ -46,6 +62,10 @@ class StudentController extends Controller
         ], 201);
     }
 
+    /**
+     * @param Student $student
+     * @return JsonResponse
+     */
     public function show(Student $student): JsonResponse
     {
         return response()->json([
@@ -54,6 +74,11 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateStudentRequest $request
+     * @param Student $student
+     * @return JsonResponse
+     */
     public function update(UpdateStudentRequest $request, Student $student): JsonResponse
     {
         $student->update($request->validated());
@@ -65,6 +90,10 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * @param Student $student
+     * @return JsonResponse
+     */
     public function destroy(Student $student): JsonResponse
     {
         $student->delete();
@@ -75,6 +104,10 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $student = Student::onlyTrashed()->findOrFail($id);
@@ -87,6 +120,10 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $student = Student::onlyTrashed()->findOrFail($id);
@@ -98,6 +135,10 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * @param Student $student
+     * @return JsonResponse
+     */
     public function toggleStatus(Student $student): JsonResponse
     {
         $student->update([

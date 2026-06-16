@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class TrainerController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Trainer::query();
@@ -29,12 +33,24 @@ class TrainerController extends Controller
             $query->where('status', $request->status);
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => TrainerResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => TrainerResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreTrainerRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreTrainerRequest $request): JsonResponse
     {
         $trainer = Trainer::create($request->validated());
@@ -46,6 +62,10 @@ class TrainerController extends Controller
         ], 201);
     }
 
+    /**
+     * @param Trainer $trainer
+     * @return JsonResponse
+     */
     public function show(Trainer $trainer): JsonResponse
     {
         return response()->json([
@@ -54,6 +74,11 @@ class TrainerController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateTrainerRequest $request
+     * @param Trainer $trainer
+     * @return JsonResponse
+     */
     public function update(UpdateTrainerRequest $request, Trainer $trainer): JsonResponse
     {
         $trainer->update($request->validated());
@@ -65,6 +90,10 @@ class TrainerController extends Controller
         ]);
     }
 
+    /**
+     * @param Trainer $trainer
+     * @return JsonResponse
+     */
     public function destroy(Trainer $trainer): JsonResponse
     {
         $trainer->delete();
@@ -75,6 +104,10 @@ class TrainerController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $trainer = Trainer::onlyTrashed()->findOrFail($id);
@@ -87,6 +120,10 @@ class TrainerController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $trainer = Trainer::onlyTrashed()->findOrFail($id);
@@ -98,6 +135,10 @@ class TrainerController extends Controller
         ]);
     }
 
+    /**
+     * @param Trainer $trainer
+     * @return JsonResponse
+     */
     public function toggleStatus(Trainer $trainer): JsonResponse
     {
         $trainer->update([

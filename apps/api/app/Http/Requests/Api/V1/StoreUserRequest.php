@@ -6,22 +6,31 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreUserRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'roleId' => ['required', 'integer', 'exists:roles,id'],
-            'isActive' => ['required', 'boolean'],
+            'role_id' => ['required', 'integer', 'exists:roles,id'],
+            'is_active' => ['required', 'boolean'],
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
@@ -30,18 +39,18 @@ class StoreUserRequest extends FormRequest
             'email.unique' => 'This email is already in use.',
             'password.required' => 'The password is required.',
             'password.min' => 'The password must be at least 8 characters.',
-            'roleId.required' => 'The role is required.',
-            'roleId.exists' => 'The selected role does not exist.',
-            'isActive.required' => 'The active status is required.',
-            'isActive.boolean' => 'The active status must be true or false.',
+            'role_id.required' => 'The role is required.',
+            'role_id.exists' => 'The selected role does not exist.',
+            'is_active.required' => 'The active status is required.',
+            'is_active.boolean' => 'The active status must be true or false.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'role_id' => $this->roleId,
-            'is_active' => $this->isActive,
+            'role_id' => $this->input('role_id') ?? $this->input('roleId'),
+            'is_active' => $this->input('is_active') ?? $this->input('isActive'),
         ]);
     }
 }

@@ -2,11 +2,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\RequestEntry;
 
+/**
+ * @property int $id
+ * @property string $student_number
+ * @property string $name
+ * @property string $email
+ * @property string $phone
+ * @property string $birth_date
+ * @property string $status
+ * @property string $enrollment_date
+ * @property string|null $guardian_name
+ * @property string|null $guardian_phone
+ * @property string|null $guardian_relationship
+ * @property string|null $password
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, SchoolClass> $schoolClasses
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, RequestEntry> $requests
+ */
 class Student extends Model
 {
+    /** @use HasFactory<\Database\Factories\StudentFactory> */
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
@@ -35,6 +59,6 @@ class Student extends Model
 
     public function requests()
     {
-        return $this->hasMany(Request::class);
+        return $this->hasMany(RequestEntry::class);
     }
 }

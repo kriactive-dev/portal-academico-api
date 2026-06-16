@@ -7,12 +7,16 @@ use App\Http\Requests\Api\V1\DenyRequestEntryRequest;
 use App\Http\Requests\Api\V1\StoreRequestEntryRequest;
 use App\Http\Requests\Api\V1\UpdateRequestEntryRequest;
 use App\Http\Resources\Api\V1\RequestResource;
-use App\Models\Request as RequestEntry;
+use App\Models\RequestEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RequestEntryController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = RequestEntry::query();
@@ -29,12 +33,24 @@ class RequestEntryController extends Controller
             $query->where('status', $request->status);
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => RequestResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => RequestResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreRequestEntryRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreRequestEntryRequest $request): JsonResponse
     {
         $requestEntry = RequestEntry::create($request->validated());
@@ -46,6 +62,10 @@ class RequestEntryController extends Controller
         ], 201);
     }
 
+    /**
+     * @param RequestEntry $requestEntry
+     * @return JsonResponse
+     */
     public function show(RequestEntry $requestEntry): JsonResponse
     {
         return response()->json([
@@ -54,6 +74,11 @@ class RequestEntryController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateRequestEntryRequest $request
+     * @param RequestEntry $requestEntry
+     * @return JsonResponse
+     */
     public function update(UpdateRequestEntryRequest $request, RequestEntry $requestEntry): JsonResponse
     {
         $requestEntry->update($request->validated());
@@ -65,6 +90,10 @@ class RequestEntryController extends Controller
         ]);
     }
 
+    /**
+     * @param RequestEntry $requestEntry
+     * @return JsonResponse
+     */
     public function destroy(RequestEntry $requestEntry): JsonResponse
     {
         $requestEntry->delete();
@@ -75,6 +104,10 @@ class RequestEntryController extends Controller
         ]);
     }
 
+    /**
+     * @param RequestEntry $requestEntry
+     * @return JsonResponse
+     */
     public function approve(RequestEntry $requestEntry): JsonResponse
     {
         $requestEntry->update([
@@ -89,6 +122,11 @@ class RequestEntryController extends Controller
         ]);
     }
 
+    /**
+     * @param DenyRequestEntryRequest $request
+     * @param RequestEntry $requestEntry
+     * @return JsonResponse
+     */
     public function deny(DenyRequestEntryRequest $request, RequestEntry $requestEntry): JsonResponse
     {
         $requestEntry->update([
@@ -101,6 +139,37 @@ class RequestEntryController extends Controller
             'success' => true,
             'message' => 'Request denied.',
             'data' => new RequestResource($requestEntry),
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function restore(int $id): JsonResponse
+    {
+        $requestEntry = RequestEntry::onlyTrashed()->findOrFail($id);
+        $requestEntry->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request restored successfully.',
+            'data' => new RequestResource($requestEntry),
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function forceDelete(int $id): JsonResponse
+    {
+        $requestEntry = RequestEntry::onlyTrashed()->findOrFail($id);
+        $requestEntry->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request permanently deleted.',
         ]);
     }
 }

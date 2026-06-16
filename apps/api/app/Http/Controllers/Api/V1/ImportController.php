@@ -14,31 +14,55 @@ use Illuminate\Http\Request;
 
 class ImportController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importStudents(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportStudentsJob::class);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importTrainers(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportTrainersJob::class);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importSchoolClasses(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportSchoolClassesJob::class);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importCourses(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportCoursesJob::class);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importFees(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportFeesJob::class);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function importPayments(Request $request): JsonResponse
     {
         return $this->dispatchImport($request, ImportPaymentsJob::class);

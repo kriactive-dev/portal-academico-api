@@ -10,7 +10,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use OpenSpout\Reader\Common\Creator\ReaderEntityFactory;
 
 class ImportFeesJob implements ShouldQueue
 {
@@ -18,6 +17,10 @@ class ImportFeesJob implements ShouldQueue
 
     public int $timeout = 600;
 
+    /**
+     * @param string $filePath
+     * @param int $userId
+     */
     public function __construct(
         public string $filePath,
         public int $userId
@@ -32,7 +35,7 @@ class ImportFeesJob implements ShouldQueue
             return;
         }
 
-        $reader = ReaderEntityFactory::createReaderFromFile($fullPath);
+        $reader = new \OpenSpout\Reader\XLSX\Reader();
         $reader->open($fullPath);
 
         $results = ['total' => 0, 'imported' => 0, 'failed' => 0, 'errors' => []];

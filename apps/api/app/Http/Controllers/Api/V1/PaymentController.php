@@ -13,6 +13,10 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Payment::query();
@@ -33,12 +37,24 @@ class PaymentController extends Controller
             $query->where('reference_month', $request->reference_month);
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => PaymentResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => PaymentResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StorePaymentRequest $request
+     * @return JsonResponse
+     */
     public function store(StorePaymentRequest $request): JsonResponse
     {
         $payment = Payment::create($request->validated());
@@ -50,6 +66,10 @@ class PaymentController extends Controller
         ], 201);
     }
 
+    /**
+     * @param Payment $payment
+     * @return JsonResponse
+     */
     public function show(Payment $payment): JsonResponse
     {
         return response()->json([
@@ -58,6 +78,11 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdatePaymentRequest $request
+     * @param Payment $payment
+     * @return JsonResponse
+     */
     public function update(UpdatePaymentRequest $request, Payment $payment): JsonResponse
     {
         $payment->update($request->validated());
@@ -69,6 +94,10 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @param Payment $payment
+     * @return JsonResponse
+     */
     public function destroy(Payment $payment): JsonResponse
     {
         $payment->delete();
@@ -79,6 +108,10 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $payment = Payment::onlyTrashed()->findOrFail($id);
@@ -91,6 +124,10 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $payment = Payment::onlyTrashed()->findOrFail($id);
@@ -102,6 +139,10 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @param int $studentId
+     * @return JsonResponse
+     */
     public function getByStudent(int $studentId): JsonResponse
     {
         $student = Student::findOrFail($studentId);
@@ -114,9 +155,19 @@ class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'data' => PaymentResource::collection($payments),
+            'meta' => [
+                'current_page' => $payments->currentPage(),
+                'last_page' => $payments->lastPage(),
+                'per_page' => $payments->perPage(),
+                'total' => $payments->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param int $studentId
+     * @return JsonResponse
+     */
     public function getStudentSummary(int $studentId): JsonResponse
     {
         $student = Student::findOrFail($studentId);
@@ -139,13 +190,13 @@ class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'student_id' => $studentId,
-                'student_name' => $student->name,
-                'total_paid' => (float) $totalPaid,
-                'total_pending' => (float) $totalPending,
-                'total_overdue' => (float) $totalOverdue,
-                'total_debt' => (float) ($totalPending + $totalOverdue),
-                'payments_count' => $paymentsCount,
+                'studentId' => $studentId,
+                'studentName' => $student->name,
+                'totalPaid' => (float) $totalPaid,
+                'totalPending' => (float) $totalPending,
+                'totalOverdue' => (float) $totalOverdue,
+                'totalDebt' => (float) ($totalPending + $totalOverdue),
+                'paymentsCount' => $paymentsCount,
             ],
         ]);
     }

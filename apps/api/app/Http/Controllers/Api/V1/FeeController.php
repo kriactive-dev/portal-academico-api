@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class FeeController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Fee::query();
@@ -32,12 +36,24 @@ class FeeController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => FeeResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => FeeResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreFeeRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreFeeRequest $request): JsonResponse
     {
         $fee = Fee::create($request->validated());
@@ -49,6 +65,10 @@ class FeeController extends Controller
         ], 201);
     }
 
+    /**
+     * @param Fee $fee
+     * @return JsonResponse
+     */
     public function show(Fee $fee): JsonResponse
     {
         return response()->json([
@@ -57,6 +77,11 @@ class FeeController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateFeeRequest $request
+     * @param Fee $fee
+     * @return JsonResponse
+     */
     public function update(UpdateFeeRequest $request, Fee $fee): JsonResponse
     {
         $fee->update($request->validated());
@@ -68,6 +93,10 @@ class FeeController extends Controller
         ]);
     }
 
+    /**
+     * @param Fee $fee
+     * @return JsonResponse
+     */
     public function destroy(Fee $fee): JsonResponse
     {
         $fee->delete();
@@ -78,6 +107,10 @@ class FeeController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $fee = Fee::onlyTrashed()->findOrFail($id);
@@ -90,6 +123,10 @@ class FeeController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $fee = Fee::onlyTrashed()->findOrFail($id);

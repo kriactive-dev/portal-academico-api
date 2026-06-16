@@ -2,11 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $student_id
+ * @property int $course_id
+ * @property string $reference_month
+ * @property float $amount
+ * @property string $status
+ * @property string|null $method
+ * @property string|null $payment_date
+ * @property string $due_date
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read Student $student
+ * @property-read Course $course
+ */
 class Payment extends Model
 {
+    /** @use HasFactory<\Database\Factories\PaymentFactory> */
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [

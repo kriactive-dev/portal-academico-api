@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $query = User::query();
@@ -29,19 +33,32 @@ class UserController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
+        $results = $query->paginate($request->per_page ?? 15);
+
         return response()->json([
             'success' => true,
-            'data' => UserResource::collection($query->paginate($request->per_page ?? 15)),
+            'data' => UserResource::collection($results),
+            'meta' => [
+                'current_page' => $results->currentPage(),
+                'last_page' => $results->lastPage(),
+                'per_page' => $results->perPage(),
+                'total' => $results->total(),
+            ],
         ]);
     }
 
+    /**
+     * @param StoreUserRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreUserRequest $request): JsonResponse
     {
         $data = $request->validated();
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
-        $user->syncRoles([$request->roleId]);
+        $roleId = $request->input('role_id') ?? $request->input('roleId');
+        $user->syncRoles([$roleId]);
 
         return response()->json([
             'success' => true,
@@ -50,6 +67,10 @@ class UserController extends Controller
         ], 201);
     }
 
+    /**
+     * @param User $user
+     * @return JsonResponse
+     */
     public function show(User $user): JsonResponse
     {
         return response()->json([
@@ -58,6 +79,11 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param UpdateUserRequest $request
+     * @param User $user
+     * @return JsonResponse
+     */
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
         $data = $request->validated();
@@ -68,8 +94,9 @@ class UserController extends Controller
 
         $user->update($data);
 
-        if ($request->has('roleId')) {
-            $user->syncRoles([$request->roleId]);
+        $roleId = $request->input('role_id') ?? $request->input('roleId');
+        if ($roleId) {
+            $user->syncRoles([$roleId]);
         }
 
         return response()->json([
@@ -79,6 +106,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return JsonResponse
+     */
     public function destroy(User $user): JsonResponse
     {
         $user->delete();
@@ -89,6 +120,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function restore(int $id): JsonResponse
     {
         $user = User::onlyTrashed()->findOrFail($id);
@@ -101,6 +136,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
     public function forceDelete(int $id): JsonResponse
     {
         $user = User::onlyTrashed()->findOrFail($id);
@@ -112,6 +151,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return JsonResponse
+     */
     public function toggleStatus(User $user): JsonResponse
     {
         $user->update([

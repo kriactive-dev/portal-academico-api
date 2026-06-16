@@ -6,64 +6,72 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateStudentRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
-            'studentNumber' => ['sometimes', 'required', 'string', 'max:255', 'unique:students,student_number,' . $this->route('student')],
+            'student_number' => ['sometimes', 'required', 'string', 'max:255', 'unique:students,student_number,' . $this->route('student')],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:students,email,' . $this->route('student')],
             'phone' => ['sometimes', 'required', 'string', 'max:50'],
-            'birthDate' => ['sometimes', 'required', 'date'],
+            'birth_date' => ['sometimes', 'required', 'date'],
             'status' => ['sometimes', 'required', 'in:active,inactive,graduated'],
-            'enrollmentDate' => ['sometimes', 'required', 'date'],
-            'guardianName' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'guardianPhone' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'guardianRelationship' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'enrollment_date' => ['sometimes', 'required', 'date'],
+            'guardian_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'guardian_phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'guardian_relationship' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
-            'studentNumber.required' => 'The student number is required.',
-            'studentNumber.unique' => 'This student number is already in use.',
+            'student_number.required' => 'The student number is required.',
+            'student_number.unique' => 'This student number is already in use.',
             'name.required' => 'The student name is required.',
             'email.required' => 'The email address is required.',
             'email.unique' => 'This email is already in use.',
             'phone.required' => 'The phone number is required.',
-            'birthDate.required' => 'The birth date is required.',
-            'birthDate.date' => 'The birth date must be a valid date.',
+            'birth_date.required' => 'The birth date is required.',
+            'birth_date.date' => 'The birth date must be a valid date.',
             'status.required' => 'The status is required.',
             'status.in' => 'The status must be one of: active, inactive, or graduated.',
-            'enrollmentDate.required' => 'The enrollment date is required.',
-            'enrollmentDate.date' => 'The enrollment date must be a valid date.',
+            'enrollment_date.required' => 'The enrollment date is required.',
+            'enrollment_date.date' => 'The enrollment date must be a valid date.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('studentNumber')) {
-            $this->merge(['student_number' => $this->studentNumber]);
+        $data = [];
+        $pairs = [
+            'student_number' => 'studentNumber',
+            'birth_date' => 'birthDate',
+            'enrollment_date' => 'enrollmentDate',
+            'guardian_name' => 'guardianName',
+            'guardian_phone' => 'guardianPhone',
+            'guardian_relationship' => 'guardianRelationship',
+        ];
+        foreach ($pairs as $snake => $camel) {
+            if ($this->has($snake) || $this->has($camel)) {
+                $data[$snake] = $this->input($snake) ?? $this->input($camel);
+            }
         }
-        if ($this->has('birthDate')) {
-            $this->merge(['birth_date' => $this->birthDate]);
-        }
-        if ($this->has('enrollmentDate')) {
-            $this->merge(['enrollment_date' => $this->enrollmentDate]);
-        }
-        if ($this->has('guardianName')) {
-            $this->merge(['guardian_name' => $this->guardianName]);
-        }
-        if ($this->has('guardianPhone')) {
-            $this->merge(['guardian_phone' => $this->guardianPhone]);
-        }
-        if ($this->has('guardianRelationship')) {
-            $this->merge(['guardian_relationship' => $this->guardianRelationship]);
+        if (!empty($data)) {
+            $this->merge($data);
         }
     }
 }

@@ -4,8 +4,13 @@ namespace App\Http\Resources\Api\V1;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Models\SchoolClass */
 class SchoolClassResource extends JsonResource
 {
+    /**
+     * @param \Illuminate\Http\Request $request
+     * @return array<string, mixed>
+     */
     public function toArray($request): array
     {
         return [
