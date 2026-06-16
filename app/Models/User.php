@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    public function studentRecord()
+    {
+        return $this->hasOne(StudentRecord::class);
+    }
+
     /**
      * Verificar se o usuário foi criado via OAuth
      */

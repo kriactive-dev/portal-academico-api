@@ -176,11 +176,29 @@ public function logout(Request $request): JsonResponse
         }
     }
 
-    public function enrichProfile(): JsonResponse
+    public function enrichProfile(Request $request): JsonResponse
     {
         try {
-            $userProfile = UserProfile::where('user_id',Auth::user()->id)->first();
-            $this->enrichmentService->enrichProfile($userProfile);
+            if($request->has('user_id')){
+                $userProfile = UserProfile::with('user')->find($request->user_id);
+                if(!$userProfile){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Perfil não encontrado.',
+                    ], 404);
+                }
+                $this->enrichmentService->enrichProfile($userProfile);
+            }else{
+                $userProfile = UserProfile::with('user')->find(Auth::user()->id);
+                if(!$userProfile){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Perfil não encontrado.',
+                    ], 404);
+                }
+                $this->enrichmentService->enrichProfile($userProfile);
+            }
+            
 
             return response()->json([
                 'success' => true,

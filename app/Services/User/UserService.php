@@ -74,6 +74,8 @@ class UserService
 
             $user = User::create($userData);
 
+            $user->assignRole('estudante');
+
             // Atribuir roles se fornecidas
             if (isset($data['roles']) && is_array($data['roles'])) {
                 $user->assignRole($data['roles']);
