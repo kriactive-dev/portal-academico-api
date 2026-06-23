@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Documents\DocumentTypeController;
 use App\Http\Controllers\Api\EnvironmentVariable\EnvironmentVariableController;
 use App\Http\Controllers\Api\Library\BookCategoryController;
 use App\Http\Controllers\Api\Notification\NotificationController;
+use App\Http\Controllers\Api\Student\StudentInformationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -644,6 +645,13 @@ Route::middleware('auth:sanctum')->prefix('environment-variables')->group(functi
     Route::get('/situacao-academica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']); 
     Route::get('/situacao-financeira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']); 
 
+});
+
+Route::middleware('auth:sanctum')->prefix('student-information')->group(function () {
+    // CRUD básico
+    Route::get('/academic/{id}', [StudentInformationController::class, 'academicInformation']);
+    Route::get('/financial/{id}', [StudentInformationController::class, 'financialInformation']);
+    Route::get('/personal/{id}', [StudentInformationController::class, 'personalInformation']);
 });
 
 Route::get("/test/book-categories/create", function () {
