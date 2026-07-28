@@ -472,6 +472,8 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
 
     Route::get('/situacaofinanceira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']);
 
+    Route::get('/informacaobancaria/{id}', [StudentInformationController::class, 'bankInformationByStudent']);
+
 
 // ===== ROTAS DE TESTE (Temporárias) =====
 Route::get('/test/health', function () {
@@ -645,7 +647,7 @@ Route::middleware('auth:sanctum')->prefix('environment-variables')->group(functi
     Route::get('/situacao-academica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']); 
     Route::get('/situacao-financeira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']); 
 
-    Route::get('/informacoes-bancarias/{id}', [StudentInformationController::class, 'bankInformationByStudent']);
+    
 
 });
 
