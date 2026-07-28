@@ -176,40 +176,7 @@ class ChatBotMenuSeeder extends Seeder
         return <<<'EOT'
 🎓 *Licenciaturas UCM* (oferta varia por campus):
 
-• Eng. Alimentar
-• Eng. Civil
-• Eng. Electrotécnica
-• Eng. Geológica
-• Eng. Mecânica
-• Eng. Minas
-• Eng. Processamento Mineral
-• Administração Pública
-• Ciências Pol. e Rel. Internacionais
-• Contabilidade e Auditoria
-• Tecnologias Informação
-• Desenv. Comunitário e Serviço Social
-• Psicopedagogia
-• Administração Hospitalar
-• Administração e Gestão Hospitalar
-• Administração e Gestão de Empresas
-• Agronomia
-• Análises Clínicas e Laboratoriais
-• Arquitectura
-• Criminologia e Justiça Criminal
-• Direito
-• Economia e Gestão
-• Enfermagem Superior
-• Farmácia
-• Gestão Ambiental
-• Gestão Portuária
-• Gestão Recursos Florestais e Faunísticos
-• Gestão Recursos Humanos
-• Gestão RH e Relações Laborais
-• Gestão Relações Públicas e Marketing
-• Gestão Meio Ambiente e Recursos Naturais
-• Gestão e Administração Educacional
-• Medicina Geral
-• Psicologia Clínica e Assistência Social
+• Eng. Alimentar • Eng. Civil • Eng. Electrotécnica • Eng. Geológica • Eng. Mecânica • Eng. Minas • Eng. Processamento Mineral • Administração Pública • Ciências Pol. e Rel. Internacionais • Contabilidade e Auditoria • Tecnologias Informação • Desenv. Comunitário e Serviço Social • Psicopedagogia • Administração Hospitalar • Administração e Gestão Hospitalar • Administração e Gestão de Empresas • Agronomia • Análises Clínicas e Laboratoriais • Arquitectura • Criminologia e Justiça Criminal • Direito • Economia e Gestão • Enfermagem Superior • Farmácia • Gestão Ambiental • Gestão Portuária • Gestão Recursos Florestais e Faunísticos • Gestão Recursos Humanos • Gestão RH e Relações Laborais • Gestão Relações Públicas e Marketing • Gestão Meio Ambiente e Recursos Naturais • Gestão e Administração Educacional • Medicina Geral • Psicologia Clínica e Assistência Social
 
 Consulte "Cursos por campus" para oferta disponível.
 EOT;
@@ -220,41 +187,9 @@ EOT;
         return <<<'EOT'
 🎓 *Mestrados UCM* (oferta varia por campus):
 
-• Contabilidade e Auditoria
-• Penal
-• Administração Pública
-• MBA
-• Ciência Política: Governação e RI
-• Comunicação para Desenvolvimento
-• Desenv. Sustentável Recursos Florestais
-• Direito Administrativo
-• Direito Civil
-• Direito Constitucional
-• Direito Empresarial
-• Direito Fiscal
-• Direito Penal
-• Direito Petróleo e Gás
-• Direito Trabalho
-• Direito e Desenv. Sustentável
-• Direitos Humanos, Justiça e Paz
-• Economia
-• Gestão Projectos Desenvolvimento
-• Gestão RH
-• Gestão e Administração Educacional
-• Gestão Relações Públicas e Marketing
-• Planeamento e Desenv. Regional
-• Psicologia Saúde
-• Psicopedagogia
-• Saúde Pública
-• SIG e Monitoria Recursos Naturais
-• Solos e Agricultura Sustentável
-• Tecnologias Informação
+• Contabilidade e Auditoria • Penal • Administração Pública • MBA • Ciência Política: Governação e RI • Comunicação para Desenvolvimento • Desenv. Sustentável Recursos Florestais • Direito Administrativo • Direito Civil • Direito Constitucional • Direito Empresarial • Direito Fiscal • Direito Penal • Direito Petróleo e Gás • Direito Trabalho • Direito e Desenv. Sustentável • Direitos Humanos, Justiça e Paz • Economia • Gestão Projectos Desenvolvimento • Gestão RH • Gestão e Administração Educacional • Gestão Relações Públicas e Marketing • Planeamento e Desenv. Regional • Psicologia Saúde • Psicopedagogia • Saúde Pública • SIG e Monitoria Recursos Naturais • Solos e Agricultura Sustentável • Tecnologias Informação
 
-*Doutoramentos:*
-• Comunicação
-• Direito Privado
-• Direito Público
-• Inovação Educativa
+*Doutoramentos:* Comunicação • Direito Privado • Direito Público • Inovação Educativa
 
 Consulte "Cursos por campus" para oferta disponível.
 EOT;
@@ -262,6 +197,7 @@ EOT;
 
     private function getCampusOptions(): array
     {
+        // Dividido em grupos para não exceder 10 opções
         return [
             'Centro-Norte (10)' => [
                 'text' => '🏛️ Campus Centro-Norte:',
@@ -290,318 +226,74 @@ EOT;
         ];
     }
 
+    // Textos encurtados dos campi (mantendo informações essenciais)
     private function getCampus1Text(): string
     {
-        return <<<'EOT'
-📍 *Ciências Saúde - Beira*
-
-*Licenciaturas:*
-• Medicina Geral (6a/L - 12ª/SNE)
-• Enfermagem Superior (4a L/PL - 12ª/SNE)
-• Administração Hospitalar (4a L/PL - 12ª/SNE)
-• Farmácia (4a/L - 12ª/SNE)
-• Análises Clínicas (4a L/PL - 12ª/SNE)
-• Psicologia Clínica (12ª/SNE)
-
-*Mestrados:*
-• Saúde Pública (2a PL - Lic. Saúde)
-• Psicologia Saúde (2a PL - Lic. Saúde)
-EOT;
+        return "📍 *Ciências Saúde - Beira*\n\nMedicina Geral (6a/L; 12ª/SNE) • Enfermagem Superior (4a L/PL; 12ª/SNE) • Adm. Hospitalar (4a L/PL; 12ª/SNE) • Farmácia (4a/L; 12ª/SNE) • Análises Clínicas (4a L/PL; 12ª/SNE) • Psicologia Clínica (12ª/SNE)\n\nMestrados: Saúde Pública (2a PL; Lic. Saúde) • Psicologia Saúde (2a PL; Lic. Saúde)";
     }
 
     private function getCampus2Text(): string
     {
-        return <<<'EOT'
-📍 *Economia e Gestão - Beira*
-
-*Licenciaturas:*
-• Direito (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Administração Pública (4a L/PL)
-• Arquitectura (5a/L)
-• Administração e Gestão Empresas (4a L/PL)
-• Gestão RH (4a L/PL)
-• Gestão Portuária (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-• Economia e Gestão (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Direito Administrativo
-• Direito Empresarial
-• Direito Penal
-• Contabilidade e Auditoria
-• Gestão RH
-• SIG e Monitoria RN
-• Economia
-• Planeamento e Desenv. Regional
-EOT;
+        return "📍 *Economia e Gestão - Beira*\n\nDireito (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Adm. Pública (4a L/PL) • Arquitectura (5a/L) • Adm. e Gestão Empresas (4a L/PL) • Gestão RH (4a L/PL) • Gestão Portuária (4a L/PL) • TI (4a L/PL) • Economia e Gestão (4a L/PL)\n\nMestrados: MBA • Dir. Administrativo • Dir. Empresarial • Dir. Penal • Contabilidade e Auditoria • Gestão RH • SIG e Monitoria RN • Economia • Planeamento e Desenv. Regional";
     }
 
     private function getCampus3Text(): string
     {
-        return <<<'EOT'
-📍 *Engenharia - Chimoio*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Agronomia (5a/L)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-• Economia e Gestão (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-• Psicologia Clínica (4a/L)
-• Eng. Alimentar (5a L/PL)
-• Eng. Civil (5a L/PL)
-• Eng. Electrotécnica (5a L/PL)
-• Eng. Mecânica (5a L/PL)
-
-*Mestrados:*
-• MBA
-• Administração Pública
-• Direito Administrativo
-• Gestão e Administração Educacional
-EOT;
+        return "📍 *Engenharia - Chimoio*\n\nAdm. Pública (4a L/PL) • Agronomia (5a/L) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL) • Economia e Gestão (4a L/PL) • TI (4a L/PL) • Psicologia Clínica (4a/L) • Eng. Alimentar (5a L/PL) • Eng. Civil (5a L/PL) • Eng. Electrotécnica (5a L/PL) • Eng. Mecânica (5a L/PL)\n\nMestrados: MBA • Adm. Pública • Dir. Administrativo • Gestão e Adm. Educacional";
     }
 
     private function getCampus4Text(): string
     {
-        return <<<'EOT'
-📍 *Rec. Naturais e Mineralogia - Tete*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-• Economia e Gestão (4a L/PL)
-• Gestão Ambiental (4a L/PL)
-• Gestão RH (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-• Eng. Processamento Mineral (5a L/PL)
-• Eng. Minas (5a L/PL)
-• Eng. Geológica (5a L/PL)
-
-*Mestrados:*
-• MBA
-• Administração Pública
-• Direito Empresarial
-• Gestão Projectos Desenv.
-• Gestão e Administração Educacional
-EOT;
+        return "📍 *Rec. Naturais e Mineralogia - Tete*\n\nAdm. Pública (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL) • Economia e Gestão (4a L/PL) • Gestão Ambiental (4a L/PL) • Gestão RH (4a L/PL) • TI (4a L/PL) • Eng. Processamento Mineral (5a L/PL) • Eng. Minas (5a L/PL) • Eng. Geológica (5a L/PL)\n\nMestrados: MBA • Adm. Pública • Dir. Empresarial • Gestão Projectos Desenv. • Gestão e Adm. Educacional";
     }
 
     private function getCampus5Text(): string
     {
-        return <<<'EOT'
-📍 *Ciências Sociais e Políticas - Quelimane*
-
-*Licenciaturas:*
-• Administração e Gestão Empresas (4a L/PL)
-• Administração e Gestão Hospitalar (4a L/PL)
-• Administração Pública (4a L/PL)
-• Ciências Pol. e RI (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Desenv. Comunitário e Serviço Social (4a L/PL)
-• Direito (4a L/PL)
-• Economia e Gestão (4a L/PL)
-• Gestão RH (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Administração Pública
-• Tecnologias Informação
-• Ciência Política
-• Direito Administrativo
-• Gestão e Administração Educacional
-• Gestão Projectos Desenv.
-• Contabilidade e Auditoria
-• Saúde Pública
-EOT;
+        return "📍 *Ciências Sociais e Políticas - Quelimane*\n\nAdm. e Gestão Empresas (4a L/PL) • Adm. e Gestão Hospitalar (4a L/PL) • Adm. Pública (4a L/PL) • Ciências Pol. e RI (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Desenv. Comunitário e Serviço Social (4a L/PL) • Direito (4a L/PL) • Economia e Gestão (4a L/PL) • Gestão RH (4a L/PL) • TI (4a L/PL)\n\nMestrados: MBA • Adm. Pública • TI • Ciência Política • Dir. Administrativo • Gestão e Adm. Educacional • Gestão Projectos Desenv. • Contabilidade e Auditoria • Saúde Pública";
     }
 
     private function getCampus6Text(): string
     {
-        return <<<'EOT'
-📍 *Direito - Nampula*
-
-*Licenciaturas:*
-• Direito (4a L/PL)
-• Administração Pública (4a L/PL)
-• Ciências Pol. e RI (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-• Criminologia e Justiça Criminal (4a L/PL)
-
-*Mestrados:*
-• Administração Pública
-• Direito Civil
-• Direito e Desenv. Sustentável
-• Direito Fiscal
-• Penal
-• Ciência Política
-• Direito Empresarial
-• Direito Petróleo e Gás
-• Direito Constitucional
-• Direito Trabalho
-
-*Doutoramentos:*
-• Direito Público
-• Direito Privado
-EOT;
+        return "📍 *Direito - Nampula*\n\nDireito (4a L/PL) • Adm. Pública (4a L/PL) • Ciências Pol. e RI (4a L/PL) • TI (4a L/PL) • Criminologia e Justiça Criminal (4a L/PL)\n\nMestrados: Adm. Pública • Dir. Civil • Dir. e Desenv. Sustentável • Dir. Fiscal • Penal • Ciência Política • Dir. Empresarial • Dir. Petróleo e Gás • Dir. Constitucional • Dir. Trabalho\n\nDoutoramentos: Direito Público • Direito Privado";
     }
 
     private function getCampus7Text(): string
     {
-        return <<<'EOT'
-📍 *Educação e Comunicação - Nampula*
-
-*Licenciaturas:*
-• Psicopedagogia (4a L/PL)
-• Gestão e Administração Educacional (4a L/PL)
-• Gestão Relações Públicas e Marketing (4a L/PL)
-• Economia e Gestão (4a L/PL)
-• Desenv. Comunitário e Serviço Social (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Gestão RH e Relações Laborais (4a L/PL)
-
-*Mestrados:*
-• Gestão RH
-• Gestão Relações Públicas
-• Comunicação para Desenv.
-• Gestão Projectos Desenv.
-• MBA
-
-*Doutoramentos:*
-• Inovação Educativa
-• Ciências da Comunicação
-EOT;
+        return "📍 *Educação e Comunicação - Nampula*\n\nPsicopedagogia (4a L/PL) • Gestão e Adm. Educacional (4a L/PL) • Gestão Relações Públicas e Marketing (4a L/PL) • Economia e Gestão (4a L/PL) • Desenv. Comunitário e Serviço Social (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Gestão RH e Relações Laborais (4a L/PL)\n\nMestrados: Gestão RH • Gestão Relações Públicas • Comunicação para Desenv. • Gestão Projectos Desenv. • MBA\n\nDoutoramentos: Inovação Educativa • Ciências da Comunicação";
     }
 
     private function getCampus8Text(): string
     {
-        return <<<'EOT'
-📍 *Extensão Maputo*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Ciências Pol. e RI (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-• Economia e Gestão (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Direito Administrativo
-• Contabilidade e Auditoria
-• Saúde Pública
-EOT;
+        return "📍 *Extensão Maputo*\n\nAdm. Pública (4a L/PL) • Ciências Pol. e RI (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL) • Economia e Gestão (4a L/PL)\n\nMestrados: MBA • Dir. Administrativo • Contabilidade e Auditoria • Saúde Pública";
     }
 
     private function getCampus9Text(): string
     {
-        return <<<'EOT'
-📍 *Extensão Nacala*
-
-*Licenciaturas:*
-• Gestão Portuária (4a L/PL)
-• Gestão RH (4a L/PL)
-• Direito (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Gestão e Administração Educacional
-• Gestão RH
-EOT;
+        return "📍 *Extensão Nacala*\n\nGestão Portuária (4a L/PL) • Gestão RH (4a L/PL) • Direito (4a L/PL) • Contabilidade e Auditoria (4a L/PL)\n\nMestrados: MBA • Gestão e Adm. Educacional • Gestão RH";
     }
 
     private function getCampus10Text(): string
     {
-        return <<<'EOT'
-📍 *Extensão Gurué*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-
-*Mestrados:*
-• Administração Pública
-• Gestão e Administração Educacional
-• Psicopedagogia
-EOT;
+        return "📍 *Extensão Gurué*\n\nAdm. Pública (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL)\n\nMestrados: Adm. Pública • Gestão e Adm. Educacional • Psicopedagogia";
     }
 
     private function getCampus11Text(): string
     {
-        return <<<'EOT'
-📍 *Extensão Xai-Xai*
-
-*Mestrados:*
-• MBA
-• Direitos Humanos, Justiça e Paz
-• Ciência Política
-• Contabilidade e Auditoria
-EOT;
+        return "📍 *Extensão Xai-Xai*\n\nMestrados: MBA • Direitos Humanos, Justiça e Paz • Ciência Política • Contabilidade e Auditoria";
     }
 
     private function getCampus12Text(): string
     {
-        return <<<'EOT'
-📍 *Ciências Agronómicas - Cuamba*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Agronomia (4a L/PL)
-• Direito (4a L/PL)
-
-*Mestrados:*
-• Solos e Agricultura Sustentável
-• MBA
-EOT;
+        return "📍 *Ciências Agronómicas - Cuamba*\n\nAdm. Pública (4a L/PL) • Agronomia (4a L/PL) • Direito (4a L/PL)\n\nMestrados: Solos e Agricultura Sustentável • MBA";
     }
 
     private function getCampus13Text(): string
     {
-        return <<<'EOT'
-📍 *Rec. Florestais e Faunísticos - Lichinga*
-
-*Licenciaturas:*
-• Economia e Gestão (4a L/PL)
-• Gestão Recursos Florestais (4a L/PL)
-• Administração e Gestão Hospitalar (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Gestão e Administração Educacional
-• Direito Administrativo
-• Desenv. Sustentável Recursos Florestais
-EOT;
+        return "📍 *Rec. Florestais e Faunísticos - Lichinga*\n\nEconomia e Gestão (4a L/PL) • Gestão Recursos Florestais (4a L/PL) • Adm. e Gestão Hospitalar (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL)\n\nMestrados: MBA • Gestão e Adm. Educacional • Dir. Administrativo • Desenv. Sustentável Recursos Florestais";
     }
 
     private function getCampus14Text(): string
     {
-        return <<<'EOT'
-📍 *Gestão Turismo e Informática - Pemba*
-
-*Licenciaturas:*
-• Administração Pública (4a L/PL)
-• Contabilidade e Auditoria (4a L/PL)
-• Direito (4a L/PL)
-• Economia e Gestão (4a L/PL)
-• Gestão RH (4a L/PL)
-• Gestão Meio Ambiente (4a L/PL)
-• Tecnologias Informação (4a L/PL)
-
-*Mestrados:*
-• MBA
-• Administração Pública
-• SIG e Monitoria RN
-• Tecnologias Informação
-• Gestão e Administração Educacional
-• Direito Civil
-EOT;
+        return "📍 *Gestão Turismo e Informática - Pemba*\n\nAdm. Pública (4a L/PL) • Contabilidade e Auditoria (4a L/PL) • Direito (4a L/PL) • Economia e Gestão (4a L/PL) • Gestão RH (4a L/PL) • Gestão Meio Ambiente (4a L/PL) • TI (4a L/PL)\n\nMestrados: MBA • Adm. Pública • SIG e Monitoria RN • TI • Gestão e Adm. Educacional • Dir. Civil";
     }
 }

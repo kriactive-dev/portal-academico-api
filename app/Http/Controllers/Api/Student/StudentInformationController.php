@@ -36,6 +36,24 @@ class StudentInformationController extends Controller
             }
     }
 
+    public function bankInformationByStudent(int $id)
+    {
+        try {
+            $bankInformation = $this->studentInformationService->getBankInformationByStudent($id);
+            return response()->json([
+                'success' => true,
+                'message' => 'Informações bancárias recuperadas com sucesso.',
+                'data' => $bankInformation
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao recuperar informações bancárias.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function financialInformation(int $id)
     {
         try {
