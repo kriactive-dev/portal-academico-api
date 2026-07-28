@@ -27,7 +27,8 @@ class StudentInformationService
             $hash = md5($chave . $codigoEstudante);
 
             // URL do endpoint da UCM
-            $url = "http://172.20.0.45/api/nib/{$codigoEstudante}/{$hash}";
+            // $url = "http://172.20.0.45/api/nib/{$codigoEstudante}/{$hash}";
+            $url = "https://primaveraapi.ucm.ac.mz/api/nib/{$codigoEstudante}/{$hash}";
             
             Log::info('Fazendo requisição para UCM', [
                 'codigo_estudante' => $codigoEstudante,
