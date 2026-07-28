@@ -645,6 +645,8 @@ Route::middleware('auth:sanctum')->prefix('environment-variables')->group(functi
     Route::get('/situacao-academica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']); 
     Route::get('/situacao-financeira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']); 
 
+    Route::get('/informacoes-bancarias/{id}', [StudentInformationController::class, 'bankInformationByStudent']);
+
 });
 
 Route::middleware('auth:sanctum')->prefix('student-information')->group(function () {
