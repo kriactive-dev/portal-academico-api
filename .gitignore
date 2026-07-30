@@ -16,6 +16,7 @@
 /public/build
 /public/hot
 /public/storage
+/public/firebase-credentials.json
 /storage/*.key
 /storage/pail
 /vendor
@@ -23,3 +24,4 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 *.md
+/storage/app/firebase/firebase-credentials.json
