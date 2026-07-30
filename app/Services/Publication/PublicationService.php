@@ -146,7 +146,7 @@ class PublicationService
                 $this->firebaseService->sendToTopic($topic, $title, $body, [
                     'type' => 'publication',
                     'publication_id' => (string) $publication->id,
-                    'topic' => $topic,
+                    'topic' => $topic ?? 'students',
                 ]);
             } catch (Exception $e) {
                 Log::error("Erro ao enviar notificações para publicação {$publication->id}: " . $e->getMessage());
