@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use App\Services\Auth\FirebaseAuthService;
+use App\Services\Notification\PushNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 
@@ -15,9 +17,14 @@ class FirebaseAuthController extends Controller
 {
     protected FirebaseAuthService $firebaseAuthService;
 
-    public function __construct(FirebaseAuthService $firebaseAuthService)
-    {
+    protected PushNotificationService $pushNotificationService;
+
+    public function __construct(
+        FirebaseAuthService $firebaseAuthService,
+        PushNotificationService $pushNotificationService
+    ) {
         $this->firebaseAuthService = $firebaseAuthService;
+        $this->pushNotificationService = $pushNotificationService;
     }
 
     /**
@@ -373,16 +380,54 @@ class FirebaseAuthController extends Controller
 
     public function savetoken(Request $request)
     {
-        $data = $request->all();
-
-        $token = DeviceToken::create([
-            'user_id' => Auth::user()->id,
-            'firebase_token' => $data['firebase_token']
+        $validator = Validator::make($request->all(), [
+            'firebase_token' => 'required|string',
+        ], [
+            'firebase_token.required' => 'O token Firebase do dispositivo é obrigatório.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados de validação inválidos.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = Auth::user();
+        $firebaseToken = $request->input('firebase_token');
+
+        $deviceToken = DeviceToken::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'firebase_token' => $firebaseToken,
+            ],
+            [
+                'user_id' => $user->id,
+                'firebase_token' => $firebaseToken,
+            ]
+        );
+
+        $profile = $user->profile;
+        $topics = $this->pushNotificationService->topicsFromProfile($profile);
+        $subscribed = [];
+
+        try {
+            $subscribed = $this->pushNotificationService->subscribeToTopics($firebaseToken, $topics);
+        } catch (Exception $e) {
+            Log::error('Erro ao inscrever device token nos tópicos FCM', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $token
+            'message' => 'Device token registado e inscrito nos tópicos.',
+            'data' => [
+                'device_token' => $deviceToken,
+                'topics' => $subscribed,
+            ],
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Notification;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use App\Services\Notification\LocalNotificationService;
+use App\Services\Notification\PushNotificationService;
 use Kreait\Firebase\Factory;
 use Exception;
 use Illuminate\Http\Request;
@@ -17,12 +18,12 @@ use Kreait\Firebase\Auth as FirebaseAuth;
 
 class NotificationController extends Controller
 {
-    // protected LocalNotificationService $localNotificationService;
+    protected PushNotificationService $pushNotificationService;
 
-    // public function __construct(LocalNotificationService $localNotificationService)
-    // {
-    //     $this->localNotificationService = $localNotificationService;
-    // }
+    public function __construct(PushNotificationService $pushNotificationService)
+    {
+        $this->pushNotificationService = $pushNotificationService;
+    }
 
     /**
      * Envia notificação Firebase (método existente)
@@ -556,6 +557,60 @@ class NotificationController extends Controller
                 'error' => 'Erro interno: ' . $th->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Inscreve o device token nos tópicos informados (ou nos do perfil do utilizador).
+     */
+    public function subscribe(Request $request): JsonResponse
+    {
+        $request->validate([
+            'firebase_token' => 'required|string',
+            'topics' => 'nullable|array',
+            'topics.*' => 'string|max:255',
+        ]);
+
+        $token = $request->input('firebase_token');
+        $topics = $request->input('topics');
+
+        if (empty($topics)) {
+            $topics = $this->pushNotificationService->topicsFromProfile($request->user()?->profile);
+        }
+
+        $subscribed = $this->pushNotificationService->subscribeToTopics($token, $topics);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inscrito nos tópicos com sucesso.',
+            'data' => [
+                'topics' => $subscribed,
+            ],
+        ]);
+    }
+
+    /**
+     * Remove o device token dos tópicos informados.
+     */
+    public function unsubscribe(Request $request): JsonResponse
+    {
+        $request->validate([
+            'firebase_token' => 'required|string',
+            'topics' => 'required|array|min:1',
+            'topics.*' => 'string|max:255',
+        ]);
+
+        $token = $request->input('firebase_token');
+        $topics = $request->input('topics');
+
+        $this->pushNotificationService->unsubscribeFromTopics($token, $topics);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Removido dos tópicos com sucesso.',
+            'data' => [
+                'topics' => $topics,
+            ],
+        ]);
     }
 
     /**

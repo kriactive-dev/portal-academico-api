@@ -21,7 +21,8 @@ class Publication extends Model
         'expires_at',
         'university_id',
         'university_name',
-        'year'
+        'year',
+        'course_id',
     ];
 
     protected $casts = [

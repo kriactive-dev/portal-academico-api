@@ -2,8 +2,8 @@
 
 namespace App\Services\Publication;
 
-use App\Models\DeviceToken;
 use App\Models\Publication;
+use App\Models\University\Course;
 use App\Models\University\University;
 use App\Services\Notification\NotificationService;
 use App\Services\Notification\PushNotificationService;
@@ -126,24 +126,30 @@ class PublicationService
 
             DB::commit();
 
-            $tokens = DeviceToken::pluck('firebase_token')->filter()->toArray();
-            // $token = 'token';
             $title = 'Uma nova publicação foi criada!';
             $body = 'Por favor aceda a plataforma para mais detalhes.';
 
-            $this->notificationService->notifyUsersAboutNewPublication($publication);
-            $this->firebaseService->sendToDevices($tokens, $title, $body);
+            try {
+                $this->notificationService->notifyUsersAboutNewPublication($publication);
 
-
-            // Enviar notificações para usuários relacionados à universidade
-            if ($publication->university_id) {
-                try {
-                    $this->notificationService->notifyUsersAboutNewPublication($publication);
-                    $this->firebaseService->sendToDevices($tokens, $title, $body);
-                } catch (Exception $e) {
-                    // Log do erro mas não falha a criação da publicação
-                    Log::error("Erro ao enviar notificações para publicação {$publication->id}: " . $e->getMessage());
+                $courseName = null;
+                if (!empty($publication->course_id)) {
+                    $courseName = Course::query()->whereKey($publication->course_id)->value('name');
                 }
+
+                $topic = $this->firebaseService->topicFromPublication(
+                    $courseName,
+                    $publication->year,
+                    $publication->university_name
+                );
+
+                $this->firebaseService->sendToTopic($topic, $title, $body, [
+                    'type' => 'publication',
+                    'publication_id' => (string) $publication->id,
+                    'topic' => $topic,
+                ]);
+            } catch (Exception $e) {
+                Log::error("Erro ao enviar notificações para publicação {$publication->id}: " . $e->getMessage());
             }
 
             return $publication->fresh(['creator', 'updater']);
@@ -467,8 +473,26 @@ class PublicationService
      */
     public function resendNotifications(Publication $publication): void
     {
-        if ($publication->university_id) {
-            $this->notificationService->notifyUsersAboutNewPublication($publication);
+        $this->notificationService->notifyUsersAboutNewPublication($publication);
+
+        $title = 'Uma nova publicação foi criada!';
+        $body = 'Por favor aceda a plataforma para mais detalhes.';
+
+        $courseName = null;
+        if (!empty($publication->course_id)) {
+            $courseName = Course::query()->whereKey($publication->course_id)->value('name');
         }
+
+        $topic = $this->firebaseService->topicFromPublication(
+            $courseName,
+            $publication->year,
+            $publication->university_name
+        );
+
+        $this->firebaseService->sendToTopic($topic, $title, $body, [
+            'type' => 'publication',
+            'publication_id' => (string) $publication->id,
+            'topic' => $topic,
+        ]);
     }
 }

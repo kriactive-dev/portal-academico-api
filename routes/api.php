@@ -303,7 +303,9 @@ Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
     Route::post('/send-test', [NotificationController::class, 'sendTestNotification']); 
     
     // Firebase (existente)
-    Route::post('/send-firebase', [NotificationController::class, 'send']); 
+    Route::post('/send-firebase', [NotificationController::class, 'send']);
+    Route::post('/subscribe', [NotificationController::class, 'subscribe']);
+    Route::post('/unsubscribe', [NotificationController::class, 'unsubscribe']);
 });
 
 Route::middleware('auth:sanctum')->prefix('chatbot')->group(function () {
