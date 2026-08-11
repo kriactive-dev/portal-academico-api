@@ -470,6 +470,9 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
 
     Route::get('/getallquestions', [QuestionController::class, 'getall']);
 
+    Route::get('/questions', [QuestionController::class, 'index']);
+    Route::get('/questions/{id}', [QuestionController::class, 'show']);
+
     Route::get('/situacaoacademica/{id}', [EnvironmentVariableController::class, 'showSituacaoAcademica']);
 
     Route::get('/situacaofinanceira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']);
