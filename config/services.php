@@ -59,4 +59,11 @@ return [
         'cache_ttl' => env('USER_ENRICHMENT_CACHE_TTL', 3600), // 1 hora
     ],
 
+    'messenger' => [
+        'verify_token' => env('MESSENGER_VERIFY_TOKEN'),
+        'app_secret'   => env('MESSENGER_APP_SECRET'),
+        'page_token'   => env('MESSENGER_PAGE_TOKEN'),
+        'api_version'  => env('MESSENGER_API_VERSION', 'v21.0'),
+    ],
+
 ];

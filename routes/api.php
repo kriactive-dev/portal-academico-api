@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\FirebaseAuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\ChatBot\ChatBotController;
+use App\Http\Controllers\Api\ChatBot\Messenger\MessengerBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
 use App\Http\Controllers\Api\ChatBot\WebChatBotController;
@@ -478,6 +479,9 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
     Route::get('/situacaofinanceira/{id}', [EnvironmentVariableController::class, 'showSituacaoFinanceira']);
 
     Route::get('/informacaobancaria/{id}', [StudentInformationController::class, 'bankInformationByStudent']);
+
+    Route::get('/webhook/messenger',  [MessengerBotController::class, 'verify']);
+    Route::post('/webhook/messenger', [MessengerBotController::class, 'handle']);
 
 
 // ===== ROTAS DE TESTE (Temporárias) =====
