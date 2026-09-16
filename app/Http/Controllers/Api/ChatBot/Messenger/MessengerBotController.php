@@ -74,33 +74,37 @@ class MessengerBotController extends Controller
 
             $this->messenger->markSeen($from);
             $this->messenger->typingOn($from);
- 
-            // ── Postback (botões com payload / Get Started) ────────────
-            if (isset($messagingEvent['postback'])) {
-                $payload = $messagingEvent['postback']['payload'] ?? '';
-                Log::info('Messenger postback', ['from' => $from, 'payload' => $payload]);
-                return $this->processPayload($from, $payload);
-            }
- 
-            // ── Mensagem de texto ──────────────────────────────────────
-            if (isset($messagingEvent['message'])) {
-                if (!empty($messagingEvent['message']['is_echo'])) {
-                    return response()->json(['status' => 'echo']);
-                }
 
-                $text = $messagingEvent['message']['text'] ?? '';
- 
-                // Botões quick_reply também têm payload
-                if (isset($messagingEvent['message']['quick_reply'])) {
-                    $payload = $messagingEvent['message']['quick_reply']['payload'] ?? '';
+            try {
+                // ── Postback (botões com payload / Get Started) ────────────
+                if (isset($messagingEvent['postback'])) {
+                    $payload = $messagingEvent['postback']['payload'] ?? '';
+                    Log::info('Messenger postback', ['from' => $from, 'payload' => $payload]);
                     return $this->processPayload($from, $payload);
                 }
- 
-                return $this->processText($from, $text);
-            }
- 
-            return response()->json(['status' => 'waiting']);
- 
+
+                // ── Mensagem de texto ──────────────────────────────────────
+                if (isset($messagingEvent['message'])) {
+                    if (!empty($messagingEvent['message']['is_echo'])) {
+                        return response()->json(['status' => 'echo']);
+                    }
+
+                    $text = $messagingEvent['message']['text'] ?? '';
+
+                    // Botões quick_reply também têm payload
+                    if (isset($messagingEvent['message']['quick_reply'])) {
+                        $payload = $messagingEvent['message']['quick_reply']['payload'] ?? '';
+                        return $this->processPayload($from, $payload);
+                    }
+
+                    Log::info('Messenger texto', ['from' => $from, 'text' => $text]);
+                    return $this->processText($from, $text);
+                }
+
+                return response()->json(['status' => 'waiting']);
+            } finally {
+                $this->messenger->typingOff($from);
+            } 
         } catch (\Throwable $e) {
             Log::error('Messenger webhook erro: ' . $e->getMessage());
             return response()->json(['status' => 'error']);
@@ -315,17 +319,20 @@ class MessengerBotController extends Controller
         $elements = $options->take(10)->values()->map(function ($opt) {
             $label = $opt->label ?: $opt->value;
 
-            // Payload estável por id (evita falhas com labels longos / value estranho)
+            // Payload estável por id (o clique do carrossel usa isto)
             $payload = !empty($opt->id)
                 ? 'opt:' . $opt->id
                 : (string) $opt->value;
+
+            // Botão curto: "1", "3.1", "Voltar" — o cartão mostra o nome completo
+            $buttonTitle = $this->optionButtonTitle($label);
 
             return [
                 'title'    => $this->messenger->truncateTitle($label, 80),
                 'subtitle' => 'Toque no botão para escolher',
                 'buttons'  => [[
                     'type'    => 'postback',
-                    'title'   => $this->messenger->truncateTitle($label, 20),
+                    'title'   => $buttonTitle,
                     'payload' => $payload,
                 ]],
             ];
@@ -348,6 +355,15 @@ class MessengerBotController extends Controller
         return $options;
     }
 
+    private function optionButtonTitle(string $label): string
+    {
+        if (preg_match('/^(\d+(?:\.\d+)*)/', trim($label), $matches)) {
+            return $this->messenger->truncateTitle($matches[1], 20);
+        }
+
+        return $this->messenger->truncateTitle($label, 20);
+    }
+
     private function resolveOptionFromPayload(QuestionBot $question, string $input): ?OptionBot
     {
         $raw = trim($input);
@@ -361,7 +377,8 @@ class MessengerBotController extends Controller
         // Payload do carrossel: opt:{id}
         if (preg_match('/^opt:(\d+)$/i', $raw, $matches)) {
             $optionId = (int) $matches[1];
-            $byId = $options->firstWhere('id', $optionId);
+
+            $byId = $options->first(fn ($opt) => (int) ($opt->id ?? 0) === $optionId);
             if ($byId) {
                 return $byId;
             }
@@ -379,12 +396,19 @@ class MessengerBotController extends Controller
             }
         }
 
-        // Código tipo "1.1" / "1.1 como fazer insc…" (labels do teu menu)
-        if (preg_match('/^(\d+(?:\.\d+)+)/', $normalized, $matches)) {
+        // Código do label: "1", "1.1", "3. Propinas…", "3.1 Valor…"
+        if (preg_match('/^(\d+(?:\.\d+)*)/', $normalized, $matches)) {
             $code = $matches[1];
-            $byCode = $options->first(
-                fn ($opt) => str_starts_with(mb_strtolower((string) $opt->label), $code)
-            );
+
+            $byCode = $options->first(function ($opt) use ($code) {
+                $label = mb_strtolower(trim((string) $opt->label));
+                if (!preg_match('/^(\d+(?:\.\d+)*)/', $label, $labelMatch)) {
+                    return false;
+                }
+
+                return $labelMatch[1] === $code;
+            });
+
             if ($byCode) {
                 return $byCode;
             }
@@ -395,9 +419,7 @@ class MessengerBotController extends Controller
         return $options->first(function ($opt) use ($normalized, $cleanInput) {
             $label = mb_strtolower((string) $opt->label);
             $value = mb_strtolower((string) $opt->value);
-            $buttonTitle = mb_strtolower(
-                $this->messenger->truncateTitle((string) ($opt->label ?: $opt->value), 20)
-            );
+            $buttonTitle = mb_strtolower($this->optionButtonTitle((string) ($opt->label ?: $opt->value)));
             $cleanLabel = $this->normalizeOptionText($label);
             $cleanButton = $this->normalizeOptionText($buttonTitle);
 

@@ -124,6 +124,14 @@ class MessengerService
             'sender_action' => 'typing_on',
         ]);
     }
+
+    public function typingOff(string $psid): bool
+    {
+        return $this->send([
+            'recipient'     => ['id' => $psid],
+            'sender_action' => 'typing_off',
+        ]);
+    }
  
     // ─────────────────────────────────────────────
     // Chamada base à Graph API
