@@ -39,6 +39,12 @@ class MessengerBotController extends Controller
     // ─────────────────────────────────────────────
     public function handle(Request $request)
     {
+        // DEBUG: o que o Facebook envia (ver storage/logs/laravel.log)
+        Log::info('Messenger webhook RAW', [
+            'raw_body' => $request->getContent(),
+            'json' => $request->all(),
+        ]);
+
         // 1. Valida assinatura HMAC
         $signature = $request->header('X-Hub-Signature-256');
         $expected  = 'sha256=' . hash_hmac(
@@ -54,50 +60,117 @@ class MessengerBotController extends Controller
 
         // 2. Garante que é evento de página
         if ($request->input('object') !== 'page') {
+            Log::info('Messenger ignorado: object != page', [
+                'object' => $request->input('object'),
+            ]);
             return response()->json(['status' => 'ignored']);
         }
 
         try {
-            $entry          = $request->input('entry')[0] ?? null;
-            $messagingEvent = $entry['messaging'][0] ?? null;
-
-            if (!$messagingEvent) {
-                return response()->json(['status' => 'no_event']);
-            }
-
-            $from = $messagingEvent['sender']['id'];
-
-            // ── Postback (botões do carrossel / Get Started) ────────────
-            if (isset($messagingEvent['postback'])) {
-                $payload = (string) ($messagingEvent['postback']['payload'] ?? '');
-                Log::info('Messenger postback', ['from' => $from, 'payload' => $payload]);
-                return $this->processPayload($from, $payload);
-            }
-
-            // ── Mensagem de texto ──────────────────────────────────────
-            if (isset($messagingEvent['message'])) {
-                if (!empty($messagingEvent['message']['is_echo'])) {
-                    return response()->json(['status' => 'echo']);
+            foreach ($request->input('entry', []) as $entry) {
+                foreach ($entry['messaging'] ?? [] as $messagingEvent) {
+                    $this->handleMessagingEvent($messagingEvent);
                 }
-
-                $text = (string) ($messagingEvent['message']['text'] ?? '');
-
-                if (isset($messagingEvent['message']['quick_reply'])) {
-                    $payload = (string) ($messagingEvent['message']['quick_reply']['payload'] ?? '');
-                    return $this->processPayload($from, $payload);
-                }
-
-                Log::info('Messenger texto', ['from' => $from, 'text' => $text]);
-                return $this->processText($from, $text);
             }
 
-            return response()->json(['status' => 'waiting']);
+            return response()->json(['status' => 'ok']);
         } catch (\Throwable $e) {
             Log::error('Messenger webhook erro: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json(['status' => 'error']);
         }
+    }
+
+    private function handleMessagingEvent(array $messagingEvent): void
+    {
+        $from = $messagingEvent['sender']['id'] ?? null;
+        if (!$from) {
+            Log::info('Messenger evento sem sender', ['event' => $messagingEvent]);
+            return;
+        }
+
+        if (isset($messagingEvent['delivery']) || isset($messagingEvent['read'])) {
+            Log::info('Messenger delivery/read ignorado', [
+                'from' => $from,
+                'keys' => array_keys($messagingEvent),
+            ]);
+            return;
+        }
+
+        $sessionQuestionId = Cache::get("msng_question_$from");
+        $optionMap = Cache::get("msng_option_map_$from");
+
+        // ── Postback (botões do carrossel / Get Started) ────────────
+        if (isset($messagingEvent['postback'])) {
+            $payload = (string) ($messagingEvent['postback']['payload'] ?? '');
+            $title = (string) ($messagingEvent['postback']['title'] ?? '');
+
+            Log::info('Messenger POSTBACK detalhe', [
+                'from' => $from,
+                'payload' => $payload,
+                'title' => $title,
+                'session_question_id' => $sessionQuestionId,
+                'option_map' => $optionMap,
+                'postback' => $messagingEvent['postback'],
+            ]);
+
+            // DEBUG visível no chat (temporário)
+            $this->messenger->sendText(
+                $from,
+                "[DEBUG postback]\npayload: {$payload}\ntitle: {$title}\nsessão: " . ($sessionQuestionId ?: 'nenhuma')
+            );
+
+            $this->processPayload($from, $payload);
+            return;
+        }
+
+        // ── Mensagem de texto ──────────────────────────────────────
+        if (isset($messagingEvent['message'])) {
+            if (!empty($messagingEvent['message']['is_echo'])) {
+                Log::info('Messenger echo ignorado', ['from' => $from]);
+                return;
+            }
+
+            $text = (string) ($messagingEvent['message']['text'] ?? '');
+
+            if (isset($messagingEvent['message']['quick_reply'])) {
+                $payload = (string) ($messagingEvent['message']['quick_reply']['payload'] ?? '');
+                Log::info('Messenger QUICK_REPLY', [
+                    'from' => $from,
+                    'payload' => $payload,
+                    'session_question_id' => $sessionQuestionId,
+                ]);
+                $this->messenger->sendText($from, "[DEBUG quick_reply]\npayload: {$payload}");
+                $this->processPayload($from, $payload);
+                return;
+            }
+
+            Log::info('Messenger TEXTO detalhe', [
+                'from' => $from,
+                'text' => $text,
+                'text_hex' => bin2hex($text),
+                'session_question_id' => $sessionQuestionId,
+                'option_map' => $optionMap,
+                'message' => $messagingEvent['message'],
+            ]);
+
+            // DEBUG visível no chat (temporário)
+            $this->messenger->sendText(
+                $from,
+                "[DEBUG texto]\nrecebido: \"{$text}\"\nsessão: " . ($sessionQuestionId ?: 'nenhuma') .
+                "\nmapa: " . json_encode($optionMap ?: new \stdClass())
+            );
+
+            $this->processText($from, $text);
+            return;
+        }
+
+        Log::info('Messenger evento desconhecido', [
+            'from' => $from,
+            'keys' => array_keys($messagingEvent),
+            'event' => $messagingEvent,
+        ]);
     }
  
     // ─────────────────────────────────────────────
