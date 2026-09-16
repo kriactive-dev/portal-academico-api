@@ -47,66 +47,55 @@ class MessengerBotController extends Controller
             config('services.messenger.app_secret')
         );
 
-        // Adiciona isto temporariamente no início do método handle()
-        // Log::info('Raw body: ' . $request->getContent());
-        // Log::info('Signature header: ' . $request->header('X-Hub-Signature-256'));
-        // Log::info('App secret: ' . substr(config('services.messenger.app_secret'), 0, 6) . '...');
- 
         // if (!hash_equals($expected, $signature ?? '')) {
         //     Log::warning('Messenger: assinatura inválida');
         //     return response('Forbidden', 403);
         // }
- 
+
         // 2. Garante que é evento de página
         if ($request->input('object') !== 'page') {
             return response()->json(['status' => 'ignored']);
         }
- 
+
         try {
             $entry          = $request->input('entry')[0] ?? null;
             $messagingEvent = $entry['messaging'][0] ?? null;
- 
+
             if (!$messagingEvent) {
                 return response()->json(['status' => 'no_event']);
             }
- 
+
             $from = $messagingEvent['sender']['id'];
 
-            $this->messenger->markSeen($from);
-            $this->messenger->typingOn($from);
+            // ── Postback (botões do carrossel / Get Started) ────────────
+            if (isset($messagingEvent['postback'])) {
+                $payload = (string) ($messagingEvent['postback']['payload'] ?? '');
+                Log::info('Messenger postback', ['from' => $from, 'payload' => $payload]);
+                return $this->processPayload($from, $payload);
+            }
 
-            try {
-                // ── Postback (botões com payload / Get Started) ────────────
-                if (isset($messagingEvent['postback'])) {
-                    $payload = $messagingEvent['postback']['payload'] ?? '';
-                    Log::info('Messenger postback', ['from' => $from, 'payload' => $payload]);
+            // ── Mensagem de texto ──────────────────────────────────────
+            if (isset($messagingEvent['message'])) {
+                if (!empty($messagingEvent['message']['is_echo'])) {
+                    return response()->json(['status' => 'echo']);
+                }
+
+                $text = (string) ($messagingEvent['message']['text'] ?? '');
+
+                if (isset($messagingEvent['message']['quick_reply'])) {
+                    $payload = (string) ($messagingEvent['message']['quick_reply']['payload'] ?? '');
                     return $this->processPayload($from, $payload);
                 }
 
-                // ── Mensagem de texto ──────────────────────────────────────
-                if (isset($messagingEvent['message'])) {
-                    if (!empty($messagingEvent['message']['is_echo'])) {
-                        return response()->json(['status' => 'echo']);
-                    }
+                Log::info('Messenger texto', ['from' => $from, 'text' => $text]);
+                return $this->processText($from, $text);
+            }
 
-                    $text = $messagingEvent['message']['text'] ?? '';
-
-                    // Botões quick_reply também têm payload
-                    if (isset($messagingEvent['message']['quick_reply'])) {
-                        $payload = $messagingEvent['message']['quick_reply']['payload'] ?? '';
-                        return $this->processPayload($from, $payload);
-                    }
-
-                    Log::info('Messenger texto', ['from' => $from, 'text' => $text]);
-                    return $this->processText($from, $text);
-                }
-
-                return response()->json(['status' => 'waiting']);
-            } finally {
-                $this->messenger->typingOff($from);
-            } 
+            return response()->json(['status' => 'waiting']);
         } catch (\Throwable $e) {
-            Log::error('Messenger webhook erro: ' . $e->getMessage());
+            Log::error('Messenger webhook erro: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['status' => 'error']);
         }
     }
@@ -143,18 +132,10 @@ class MessengerBotController extends Controller
 
         // Pergunta com opções: aceita número, value, label ou texto do botão
         if ($question) {
-            $option = $this->resolveOptionFromPayload($question, $text);
-            if ($option && $option->value === 'voltar') {
-                return $this->goBack($from);
-            }
-            if ($option) {
-                return $this->advanceQuestion($from, $question, $option);
-            }
-
-            $this->sendDynamicQuestion($from, $question);
-            return response()->json(['status' => 'invalid_option']);
+            $option = $this->resolveOptionFromPayload($question, $text, $from);
+            return $this->applySelectedOption($from, $question, $option);
         }
- 
+
         return response()->json(['status' => 'waiting']);
     }
  
@@ -191,26 +172,10 @@ class MessengerBotController extends Controller
             return $this->goBack($from);
         }
  
-        // Opção do QuestionBot (opt:id, value, número ou label)
+        // Opção do QuestionBot (opt:id, número ou label)
         if ($question && $payload !== '') {
-            $option = $this->resolveOptionFromPayload($question, $payload);
-
-            if ($option && $option->value === 'voltar') {
-                return $this->goBack($from);
-            }
-
-            if ($option) {
-                return $this->advanceQuestion($from, $question, $option);
-            }
-
-            // Clique não reconhecido: reenvia as opções (em vez de silêncio)
-            Log::warning('Messenger payload não reconhecido', [
-                'from' => $from,
-                'payload' => $payload,
-                'question_id' => $question->id,
-            ]);
-            $this->sendDynamicQuestion($from, $question);
-            return response()->json(['status' => 'unknown_payload']);
+            $option = $this->resolveOptionFromPayload($question, $payload, $from);
+            return $this->applySelectedOption($from, $question, $option);
         }
 
         if ($payload !== '') {
@@ -218,6 +183,32 @@ class MessengerBotController extends Controller
         }
 
         return response()->json(['status' => 'unknown_payload']);
+    }
+
+    private function applySelectedOption(string $from, QuestionBot $question, ?OptionBot $option): \Illuminate\Http\JsonResponse
+    {
+        if ($option && $option->value === 'voltar') {
+            return $this->goBack($from);
+        }
+
+        if ($option) {
+            // Evita processar 2x o mesmo clique (postback + texto "1")
+            $dedupeKey = "msng_last_opt_$from";
+            $token = ($option->id ?? 0) . ':' . ($option->value ?? '');
+            if (Cache::get($dedupeKey) === $token) {
+                return response()->json(['status' => 'duplicate_ignored']);
+            }
+            Cache::put($dedupeKey, $token, now()->addSeconds(4));
+
+            return $this->advanceQuestion($from, $question, $option);
+        }
+
+        Log::warning('Messenger opção não reconhecida', [
+            'from' => $from,
+            'question_id' => $question->id,
+        ]);
+        $this->sendDynamicQuestion($from, $question);
+        return response()->json(['status' => 'invalid_option']);
     }
  
     // ─────────────────────────────────────────────
@@ -306,37 +297,42 @@ class MessengerBotController extends Controller
             return;
         }
 
-        $options = $this->getQuestionOptions($question);
+        $options = $this->getQuestionOptions($question)->values();
         $count = $options->count();
 
         if ($count === 0) {
             $this->messenger->sendText($from, $question->text);
+            Cache::forget("msng_option_map_$from");
             return;
         }
 
+        // Mapa 1→optionId (ou "voltar") para o utilizador poder responder com número
+        $map = [];
+        foreach ($options as $index => $opt) {
+            $map[$index + 1] = !empty($opt->id) ? (int) $opt->id : (string) $opt->value;
+        }
+        Cache::put("msng_option_map_$from", $map, now()->addMinutes(10));
+
         $this->messenger->sendText($from, $question->text);
 
-        $elements = $options->take(10)->values()->map(function ($opt) {
+        $elements = $options->take(10)->map(function ($opt, $index) {
             $label = $opt->label ?: $opt->value;
+            $number = (string) ($index + 1);
 
-            // Payload estável por id (o clique do carrossel usa isto)
             $payload = !empty($opt->id)
                 ? 'opt:' . $opt->id
                 : (string) $opt->value;
 
-            // Botão curto: "1", "3.1", "Voltar" — o cartão mostra o nome completo
-            $buttonTitle = $this->optionButtonTitle($label);
-
             return [
                 'title'    => $this->messenger->truncateTitle($label, 80),
-                'subtitle' => 'Toque no botão para escolher',
+                'subtitle' => 'Opção ' . $number . ' — toque para escolher',
                 'buttons'  => [[
                     'type'    => 'postback',
-                    'title'   => $buttonTitle,
+                    'title'   => $number,
                     'payload' => $payload,
                 ]],
             ];
-        })->toArray();
+        })->values()->toArray();
 
         $this->messenger->sendGenericTemplate($from, $elements);
     }
@@ -355,32 +351,25 @@ class MessengerBotController extends Controller
         return $options;
     }
 
-    private function optionButtonTitle(string $label): string
-    {
-        if (preg_match('/^(\d+(?:\.\d+)*)/', trim($label), $matches)) {
-            return $this->messenger->truncateTitle($matches[1], 20);
-        }
-
-        return $this->messenger->truncateTitle($label, 20);
-    }
-
-    private function resolveOptionFromPayload(QuestionBot $question, string $input): ?OptionBot
+    private function resolveOptionFromPayload(QuestionBot $question, string $input, string $from): ?OptionBot
     {
         $raw = trim($input);
-        $normalized = mb_strtolower($raw);
-        if ($normalized === '') {
+        if ($raw === '') {
             return null;
         }
 
+        $normalized = mb_strtolower($raw);
         $options = $this->getQuestionOptions($question)->values();
+        $list = $options->all();
 
-        // Payload do carrossel: opt:{id}
+        // 1) Payload do carrossel: opt:{id}
         if (preg_match('/^opt:(\d+)$/i', $raw, $matches)) {
             $optionId = (int) $matches[1];
 
-            $byId = $options->first(fn ($opt) => (int) ($opt->id ?? 0) === $optionId);
-            if ($byId) {
-                return $byId;
+            foreach ($list as $opt) {
+                if ((int) ($opt->id ?? 0) === $optionId) {
+                    return $opt;
+                }
             }
 
             return OptionBot::where('question_bot_id', $question->id)
@@ -388,51 +377,73 @@ class MessengerBotController extends Controller
                 ->first();
         }
 
-        // Só número: 1, 2, 3...
+        // 2) Número (1, 2, 3...) — mapa da sessão ou índice da lista
         if (preg_match('/^\d+$/', $normalized)) {
-            $index = ((int) $normalized) - 1;
-            if (isset($options[$index])) {
-                return $options[$index];
-            }
-        }
+            $number = (int) $normalized;
+            $map = Cache::get("msng_option_map_$from", []);
 
-        // Código do label: "1", "1.1", "3. Propinas…", "3.1 Valor…"
-        if (preg_match('/^(\d+(?:\.\d+)*)/', $normalized, $matches)) {
-            $code = $matches[1];
-
-            $byCode = $options->first(function ($opt) use ($code) {
-                $label = mb_strtolower(trim((string) $opt->label));
-                if (!preg_match('/^(\d+(?:\.\d+)*)/', $label, $labelMatch)) {
-                    return false;
+            if (isset($map[$number])) {
+                $mapped = $map[$number];
+                if ($mapped === 'voltar') {
+                    $voltar = new OptionBot();
+                    $voltar->label = 'Voltar';
+                    $voltar->value = 'voltar';
+                    return $voltar;
                 }
 
-                return $labelMatch[1] === $code;
-            });
+                foreach ($list as $opt) {
+                    if ((int) ($opt->id ?? 0) === (int) $mapped) {
+                        return $opt;
+                    }
+                }
 
-            if ($byCode) {
-                return $byCode;
+                $fromDb = OptionBot::where('question_bot_id', $question->id)
+                    ->where('id', (int) $mapped)
+                    ->first();
+                if ($fromDb) {
+                    return $fromDb;
+                }
+            }
+
+            $index = $number - 1;
+            if (array_key_exists($index, $list)) {
+                return $list[$index];
             }
         }
 
+        // 3) Código do label: "1.1", "3.1", ...
+        if (preg_match('/^(\d+\.\d+)/', $normalized, $matches)) {
+            $code = $matches[1];
+            foreach ($list as $opt) {
+                $label = mb_strtolower(trim((string) $opt->label));
+                if (preg_match('/^(\d+\.\d+)/', $label, $labelMatch) && $labelMatch[1] === $code) {
+                    return $opt;
+                }
+            }
+        }
+
+        // 4) value / label / texto do botão
         $cleanInput = $this->normalizeOptionText($normalized);
 
-        return $options->first(function ($opt) use ($normalized, $cleanInput) {
+        foreach ($list as $opt) {
             $label = mb_strtolower((string) $opt->label);
             $value = mb_strtolower((string) $opt->value);
-            $buttonTitle = mb_strtolower($this->optionButtonTitle((string) ($opt->label ?: $opt->value)));
             $cleanLabel = $this->normalizeOptionText($label);
-            $cleanButton = $this->normalizeOptionText($buttonTitle);
 
-            return $value === $normalized
-                || $label === $normalized
-                || $buttonTitle === $normalized
-                || ($cleanInput !== '' && (
-                    $cleanLabel === $cleanInput
-                    || $cleanButton === $cleanInput
-                    || str_starts_with($cleanLabel, $cleanInput)
-                    || str_starts_with($cleanInput, $cleanButton)
-                ));
-        });
+            if ($value === $normalized || $label === $normalized) {
+                return $opt;
+            }
+
+            if ($cleanInput !== '' && (
+                $cleanLabel === $cleanInput
+                || str_starts_with($cleanLabel, $cleanInput)
+                || str_starts_with($cleanInput, $cleanLabel)
+            )) {
+                return $opt;
+            }
+        }
+
+        return null;
     }
 
     private function normalizeOptionText(string $text): string
