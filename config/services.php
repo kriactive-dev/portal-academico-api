@@ -66,4 +66,12 @@ return [
         'api_version'  => env('MESSENGER_API_VERSION', 'v21.0'),
     ],
 
+    'instagram' => [
+        'verify_token' => env('INSTAGRAM_VERIFY_TOKEN'),
+        'app_secret'   => env('INSTAGRAM_APP_SECRET'),
+        'page_token'   => env('INSTAGRAM_PAGE_TOKEN'),
+        'account_id'   => env('INSTAGRAM_ACCOUNT_ID'),
+        'api_version'  => env('INSTAGRAM_API_VERSION', 'v21.0'),
+    ],
+
 ];

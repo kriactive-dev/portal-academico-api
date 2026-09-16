@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\FirebaseAuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\ChatBot\ChatBotController;
+use App\Http\Controllers\Api\ChatBot\Instagram\InstagramBotController;
 use App\Http\Controllers\Api\ChatBot\Messenger\MessengerBotController;
 use App\Http\Controllers\Api\ChatBot\OptionController;
 use App\Http\Controllers\Api\ChatBot\QuestionController;
@@ -482,6 +483,9 @@ Route::middleware('auth:sanctum')->prefix('external-app')->group(function () {
 
     Route::get('/webhook/messenger',  [MessengerBotController::class, 'verify']);
     Route::post('/webhook/messenger', [MessengerBotController::class, 'handle']);
+
+    Route::get('/webhook/instagram',  [InstagramBotController::class, 'verify']);
+    Route::post('/webhook/instagram', [InstagramBotController::class, 'handle']);
 
 
 // ===== ROTAS DE TESTE (Temporárias) =====
