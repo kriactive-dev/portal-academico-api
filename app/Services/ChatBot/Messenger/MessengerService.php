@@ -70,6 +70,38 @@ class MessengerService
             ],
         ]);
     }
+
+    // ─────────────────────────────────────────────
+    // Generic template (carrossel) — equivalente à lista do WhatsApp
+    // Máximo 10 elementos; cada um pode ter até 3 botões
+    // ─────────────────────────────────────────────
+    public function sendGenericTemplate(string $psid, array $elements): bool
+    {
+        return $this->send([
+            'recipient' => ['id' => $psid],
+            'messaging_type' => 'RESPONSE',
+            'message'   => [
+                'attachment' => [
+                    'type'    => 'template',
+                    'payload' => [
+                        'template_type' => 'generic',
+                        'elements'      => $elements,
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function truncateTitle(string $title, int $max = 20): string
+    {
+        $title = trim($title);
+
+        if (mb_strlen($title) <= $max) {
+            return $title;
+        }
+
+        return rtrim(mb_substr($title, 0, $max - 1)) . '…';
+    }
  
     // ─────────────────────────────────────────────
     // Marcar mensagem como lida (opcional / UX)

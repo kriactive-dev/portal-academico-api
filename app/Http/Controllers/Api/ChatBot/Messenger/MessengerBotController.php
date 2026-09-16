@@ -71,8 +71,11 @@ class MessengerBotController extends Controller
             }
  
             $from = $messagingEvent['sender']['id'];
+
+            $this->messenger->markSeen($from);
+            $this->messenger->typingOn($from);
  
-            // ── Postback (botões com payload) ──────────────────────────
+            // ── Postback (botões com payload / Get Started) ────────────
             if (isset($messagingEvent['postback'])) {
                 $payload = $messagingEvent['postback']['payload'] ?? '';
                 return $this->processPayload($from, $payload);
@@ -80,6 +83,10 @@ class MessengerBotController extends Controller
  
             // ── Mensagem de texto ──────────────────────────────────────
             if (isset($messagingEvent['message'])) {
+                if (!empty($messagingEvent['message']['is_echo'])) {
+                    return response()->json(['status' => 'echo']);
+                }
+
                 $text = $messagingEvent['message']['text'] ?? '';
  
                 // Botões quick_reply também têm payload
@@ -108,11 +115,11 @@ class MessengerBotController extends Controller
  
         // Sem sessão activa
         if (!$currentQuestionId) {
-            if (in_array(strtolower(trim($text)), ['olá', 'oi', 'ajuda', 'ola', 'menu'])) {
+            if ($this->isGreeting($text)) {
                 return $this->startMenu($from);
             }
  
-            $this->messenger->sendText($from, "Olá! Digite 'ajuda' para ver as opções.");
+            $this->messenger->sendText($from, "Olá! Digite 'ajuda' para receber opções.");
             return response()->json(['status' => 'no_session']);
         }
  
@@ -122,10 +129,22 @@ class MessengerBotController extends Controller
             return $this->checkStudentCode($from, $text, $awaiting);
         }
  
-        // Pergunta aberta (type = text)
         $question = QuestionBot::with('options')->find($currentQuestionId);
+
+        // Pergunta aberta (type = text)
         if ($question && $question->type === 'text') {
             return $this->advanceQuestion($from, $question, $question->options->first());
+        }
+
+        // Pergunta com opções: aceita número da lista, valor ou texto do botão
+        if ($question) {
+            $option = $this->resolveOptionFromText($question, $text);
+            if ($option) {
+                return $this->advanceQuestion($from, $question, $option);
+            }
+
+            $this->sendDynamicQuestion($from, $question);
+            return response()->json(['status' => 'invalid_option']);
         }
  
         return response()->json(['status' => 'waiting']);
@@ -136,6 +155,10 @@ class MessengerBotController extends Controller
     // ─────────────────────────────────────────────
     private function processPayload(string $from, string $payload): \Illuminate\Http\JsonResponse
     {
+        if (in_array($payload, ['GET_STARTED', 'ajuda', 'menu'], true) || $this->isGreeting($payload)) {
+            return $this->startMenu($from);
+        }
+
         $currentQuestionId = Cache::get("msng_question_$from");
         $question          = $currentQuestionId
             ? QuestionBot::with('options')->find($currentQuestionId)
@@ -204,7 +227,7 @@ class MessengerBotController extends Controller
             Cache::put("msng_question_$from", $previousId, now()->addMinutes(10));
             Cache::put("msng_history_$from", $history, now()->addMinutes(10));
         } else {
-            $this->messenger->sendText($from, "Olá! Digite 'ajuda' para ver as opções.");
+            $this->messenger->sendText($from, "Olá! Digite 'ajuda' para receber opções.");
             Cache::forget("msng_question_$from");
             Cache::forget("msng_history_$from");
         }
@@ -254,35 +277,95 @@ class MessengerBotController extends Controller
  
     private function sendDynamicQuestion(string $from, QuestionBot $question): void
     {
-        $options = $question->options->where('active', true)->values();
- 
-        if ($options->count() === 0) {
-            $this->messenger->sendText($from, $question->text);
+        if (!$question) {
             return;
         }
- 
-        // Messenger suporta até 3 quick replies por mensagem
-        // Para mais opções usa lista genérica em texto
-        if ($options->count() <= 3) {
-            $quickReplies = $options->map(fn($opt) => [
-                'content_type' => 'text',
-                'title'        => $opt->label,
-                'payload'      => $opt->value,
-            ])->toArray();
- 
-            // Adiciona botão Voltar
-            $quickReplies[] = [
-                'content_type' => 'text',
-                'title'        => '⬅ Voltar',
-                'payload'      => 'voltar',
-            ];
- 
-            $this->messenger->sendQuickReplies($from, $question->text, $quickReplies);
-        } else {
-            // Muitas opções: manda texto numerado
-            $lines = $options->map(fn($opt, $i) => ($i + 1) . ". {$opt->label}")->implode("\n");
-            $this->messenger->sendText($from, $question->text . "\n\n" . $lines . "\n\n(Responda com o número ou texto)");
+
+        $options = $question->options->values();
+        $isStart = (bool) ($question->is_start ?? false);
+
+        if (!$isStart) {
+            $voltar = new OptionBot();
+            $voltar->label = 'Voltar';
+            $voltar->value = 'voltar';
+            $options->push($voltar);
         }
+
+        $count = $options->count();
+
+        if ($question->type === 'button' && $count > 0 && $count <= 3) {
+            $buttons = $options->map(fn ($opt) => [
+                'type'    => 'postback',
+                'title'   => $this->messenger->truncateTitle($opt->label, 20),
+                'payload' => $opt->value,
+            ])->toArray();
+
+            $this->messenger->sendButtons($from, $question->text, $buttons);
+            return;
+        }
+
+        if ($count > 3) {
+            if ($count <= 10) {
+                $this->messenger->sendText($from, $question->text);
+
+                $elements = $options->map(fn ($opt) => [
+                    'title'    => $this->messenger->truncateTitle($opt->label, 80),
+                    'subtitle' => 'Toque para escolher',
+                    'buttons'  => [[
+                        'type'    => 'postback',
+                        'title'   => 'Escolher',
+                        'payload' => $opt->value,
+                    ]],
+                ])->toArray();
+
+                $this->messenger->sendGenericTemplate($from, $elements);
+                return;
+            }
+
+            if ($count <= 13) {
+                $quickReplies = $options->map(fn ($opt) => [
+                    'content_type' => 'text',
+                    'title'        => $this->messenger->truncateTitle($opt->label, 20),
+                    'payload'      => $opt->value,
+                ])->toArray();
+
+                $this->messenger->sendQuickReplies($from, $question->text, $quickReplies);
+                return;
+            }
+
+            $lines = $options->map(fn ($opt, $i) => ($i + 1) . '. ' . $opt->label)->implode("\n");
+            $this->messenger->sendText($from, $question->text . "\n\n" . $lines . "\n\nResponda com o número ou o texto da opção.");
+            return;
+        }
+
+        $this->messenger->sendText($from, $question->text);
+    }
+
+    private function resolveOptionFromText(QuestionBot $question, string $text): ?OptionBot
+    {
+        $normalized = mb_strtolower(trim($text));
+        if ($normalized === '') {
+            return null;
+        }
+
+        $options = $question->options->values();
+
+        if (preg_match('/^\d+$/', $normalized)) {
+            $index = ((int) $normalized) - 1;
+            if (isset($options[$index])) {
+                return $options[$index];
+            }
+        }
+
+        return $options->first(function ($opt) use ($normalized) {
+            return mb_strtolower((string) $opt->value) === $normalized
+                || mb_strtolower((string) $opt->label) === $normalized;
+        });
+    }
+
+    private function isGreeting(string $text): bool
+    {
+        return in_array(mb_strtolower(trim($text)), ['olá', 'oi', 'ajuda', 'ola', 'menu'], true);
     }
  
     private function saveHistory(string $from, int $questionId, array $history): void
