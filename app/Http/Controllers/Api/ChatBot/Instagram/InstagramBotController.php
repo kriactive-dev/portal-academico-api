@@ -21,14 +21,25 @@ class InstagramBotController extends Controller
     public function verify(Request $request)
     {
         $verifyToken = config('services.instagram.verify_token');
+        $mode = $request->hub_mode ?? $request->query('hub.mode');
+        $token = $request->hub_verify_token ?? $request->query('hub.verify_token');
+        $challenge = $request->hub_challenge ?? $request->query('hub.challenge');
 
-        if (
-            $request->hub_mode === 'subscribe' &&
-            $request->hub_verify_token === $verifyToken
-        ) {
-            return response($request->hub_challenge, 200);
+        Log::info('Instagram VERIFY chamado', [
+            'hub_mode' => $mode,
+            'hub_verify_token_received' => $token,
+            'hub_verify_token_expected_set' => !empty($verifyToken),
+            'hub_verify_token_match' => hash_equals((string) $verifyToken, (string) $token),
+            'hub_challenge' => $challenge,
+            'query' => $request->query(),
+        ]);
+
+        if ($mode === 'subscribe' && hash_equals((string) $verifyToken, (string) $token)) {
+            Log::info('Instagram VERIFY OK');
+            return response($challenge, 200)->header('Content-Type', 'text/plain');
         }
 
+        Log::warning('Instagram VERIFY FALHOU');
         return response('Erro de verificação', 403);
     }
 
@@ -37,6 +48,22 @@ class InstagramBotController extends Controller
     // ─────────────────────────────────────────────
     public function handle(Request $request)
     {
+        Log::info('Instagram webhook HIT', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'content_type' => $request->header('Content-Type'),
+            'user_agent' => $request->header('User-Agent'),
+            'signature' => $request->header('X-Hub-Signature-256'),
+            'config' => [
+                'verify_token_set' => !empty(config('services.instagram.verify_token')),
+                'app_secret_set' => !empty(config('services.instagram.app_secret')),
+                'page_token_set' => !empty(config('services.instagram.page_token')),
+                'account_id' => config('services.instagram.account_id') ?: '(vazio)',
+                'api_version' => config('services.instagram.api_version'),
+            ],
+        ]);
+
         Log::info('Instagram webhook RAW', [
             'raw_body' => $request->getContent(),
             'json' => $request->all(),
@@ -54,17 +81,59 @@ class InstagramBotController extends Controller
         //     return response('Forbidden', 403);
         // }
 
-        if ($request->input('object') !== 'instagram') {
-            Log::info('Instagram ignorado: object != instagram', [
-                'object' => $request->input('object'),
+        $object = $request->input('object');
+
+        // Instagram Messaging: object=instagram
+        // Em alguns setups a Page também reencaminha eventos IG
+        if (!in_array($object, ['instagram', 'page'], true)) {
+            Log::info('Instagram ignorado: object inesperado', [
+                'object' => $object,
             ]);
-            return response()->json(['status' => 'ignored']);
+            return response()->json(['status' => 'ignored', 'object' => $object]);
         }
 
         try {
-            foreach ($request->input('entry', []) as $entry) {
-                foreach ($entry['messaging'] ?? [] as $messagingEvent) {
+            $entries = $request->input('entry', []);
+            Log::info('Instagram entries', [
+                'object' => $object,
+                'entries_count' => count($entries),
+            ]);
+
+            foreach ($entries as $entryIndex => $entry) {
+                $messagingEvents = $entry['messaging'] ?? [];
+                $changes = $entry['changes'] ?? [];
+
+                Log::info('Instagram entry detalhe', [
+                    'entry_index' => $entryIndex,
+                    'entry_id' => $entry['id'] ?? null,
+                    'messaging_count' => count($messagingEvents),
+                    'changes_count' => count($changes),
+                    'entry_keys' => array_keys($entry),
+                ]);
+
+                foreach ($messagingEvents as $eventIndex => $messagingEvent) {
+                    Log::info('Instagram messaging event', [
+                        'entry_index' => $entryIndex,
+                        'event_index' => $eventIndex,
+                        'keys' => array_keys($messagingEvent),
+                    ]);
                     $this->handleMessagingEvent($messagingEvent);
+                }
+
+                // Formato alternativo (Instagram Graph / changes)
+                foreach ($changes as $changeIndex => $change) {
+                    Log::info('Instagram change event', [
+                        'entry_index' => $entryIndex,
+                        'change_index' => $changeIndex,
+                        'field' => $change['field'] ?? null,
+                        'value_keys' => array_keys($change['value'] ?? []),
+                        'value' => $change['value'] ?? null,
+                    ]);
+
+                    $value = $change['value'] ?? null;
+                    if (is_array($value) && (isset($value['sender']) || isset($value['message']))) {
+                        $this->handleMessagingEvent($value);
+                    }
                 }
             }
 
@@ -73,7 +142,7 @@ class InstagramBotController extends Controller
             Log::error('Instagram webhook erro: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['status' => 'error']);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
@@ -81,11 +150,15 @@ class InstagramBotController extends Controller
     {
         $from = $messagingEvent['sender']['id'] ?? null;
         if (!$from) {
-            Log::info('Instagram evento sem sender', ['event' => $messagingEvent]);
+            Log::warning('Instagram evento sem sender', ['event' => $messagingEvent]);
             return;
         }
 
         if (isset($messagingEvent['delivery']) || isset($messagingEvent['read'])) {
+            Log::info('Instagram delivery/read ignorado', [
+                'from' => $from,
+                'keys' => array_keys($messagingEvent),
+            ]);
             return;
         }
 
@@ -100,6 +173,7 @@ class InstagramBotController extends Controller
                 'payload' => $payload,
                 'session_question_id' => $sessionQuestionId,
                 'option_map' => $optionMap,
+                'postback' => $messagingEvent['postback'],
             ]);
 
             $this->processPayload($from, $payload);
@@ -108,6 +182,7 @@ class InstagramBotController extends Controller
 
         if (isset($messagingEvent['message'])) {
             if (!empty($messagingEvent['message']['is_echo'])) {
+                Log::info('Instagram echo ignorado', ['from' => $from]);
                 return;
             }
 
@@ -130,15 +205,21 @@ class InstagramBotController extends Controller
                 'text' => $text,
                 'session_question_id' => $sessionQuestionId,
                 'option_map' => $optionMap,
+                'message' => $messagingEvent['message'],
             ]);
 
-            $this->processText($from, $text);
+            $result = $this->processText($from, $text);
+            Log::info('Instagram processText resultado', [
+                'from' => $from,
+                'status' => $result->getData(true),
+            ]);
             return;
         }
 
-        Log::info('Instagram evento desconhecido', [
+        Log::warning('Instagram evento desconhecido', [
             'from' => $from,
             'keys' => array_keys($messagingEvent),
+            'event' => $messagingEvent,
         ]);
     }
 
@@ -245,15 +326,23 @@ class InstagramBotController extends Controller
 
     private function startMenu(string $from): \Illuminate\Http\JsonResponse
     {
+        Log::info('Instagram startMenu', ['from' => $from]);
+
         $question = QuestionBot::where('is_start', true)
             ->where('active', true)
             ->with('options')
             ->first();
 
         if (!$question) {
+            Log::warning('Instagram: nenhuma pergunta is_start activa');
             $this->instagram->sendText($from, "Nenhuma pergunta inicial cadastrada.");
             return response()->json(['status' => 'no_start_question']);
         }
+
+        Log::info('Instagram startMenu pergunta', [
+            'question_id' => $question->id,
+            'options_count' => $question->options->count(),
+        ]);
 
         $this->sendDynamicQuestion($from, $question);
         $this->saveHistory($from, $question->id, []);
