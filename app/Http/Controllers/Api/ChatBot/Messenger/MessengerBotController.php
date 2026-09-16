@@ -303,9 +303,9 @@ class MessengerBotController extends Controller
                 'subtitle' => 'Toque no botão para escolher',
                 'buttons'  => [[
                     'type'    => 'postback',
-                    'title'   => $numbered,
-                    // 'title'   => $this->messenger->truncateTitle($label, 20),
-                    'payload' => $opt->value,
+                    // 'title'   => $numbered,
+                    'title'   => $this->messenger->truncateTitle($label, 20),
+                    'payload' => $numbered,
 
                     // 'type'    => 'postback',
                     
