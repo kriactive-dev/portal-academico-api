@@ -263,7 +263,7 @@ class MessengerBotController extends Controller
             'from' => $from,
             'question_id' => $question->id,
         ]);
-        $this->sendDynamicQuestion($from, $question, (int) Cache::get("msng_page_$from", 0));
+        $this->sendDynamicQuestion($from, $question);
         return response()->json(['status' => 'invalid_option']);
     }
  
@@ -347,79 +347,48 @@ class MessengerBotController extends Controller
         return response()->json(['status' => 'student_code_checked']);
     }
  
-    private function sendDynamicQuestion(string $from, QuestionBot $question, int $page = 0): void
+    private function sendDynamicQuestion(string $from, QuestionBot $question): void
     {
         if (!$question) {
             return;
         }
 
         $options = $this->getQuestionOptions($question)->values();
-        $total = $options->count();
+        $count = $options->count();
 
-        if ($total === 0) {
+        if ($count === 0) {
             $this->messenger->sendText($from, $question->text);
             Cache::forget("msng_option_map_$from");
-            Cache::forget("msng_page_$from");
             return;
         }
 
-        // Mapa completo 1→N (permite escrever 15 mesmo na página 1)
+        // Mapa 1→optionId (ou "voltar") para o utilizador poder responder com número
         $map = [];
         foreach ($options as $index => $opt) {
             $map[$index + 1] = !empty($opt->id) ? (int) $opt->id : (string) $opt->value;
         }
         Cache::put("msng_option_map_$from", $map, now()->addMinutes(30));
 
-        // Quick replies: máx 13. Reservamos slots para Anterior/Mais.
-        $perPage = 10;
-        $totalPages = max(1, (int) ceil($total / $perPage));
-        $page = max(0, min($page, $totalPages - 1));
-        $offset = $page * $perPage;
-        $slice = $options->slice($offset, $perPage)->values();
-        $hasPrev = $page > 0;
-        $hasNext = ($offset + $perPage) < $total;
+        // Lista vertical em texto (o carrossel usa postback e o teu webhook
+        // não está a receber messaging_postbacks — só "messages")
+        $lines = $options->map(
+            fn ($opt, $index) => ($index + 1) . '. ' . ($opt->label ?: $opt->value)
+        )->implode("\n");
 
-        Cache::put("msng_page_$from", $page, now()->addMinutes(30));
+        $body = $question->text . "\n\n" . $lines . "\n\nToque numa opção ou envie o número.";
 
-        $lines = $slice->map(function ($opt, $i) use ($offset) {
-            $number = $offset + $i + 1;
-            return $number . '. ' . ($opt->label ?: $opt->value);
-        })->implode("\n");
-
-        $body = $question->text . "\n\n" . $lines;
-        if ($totalPages > 1) {
-            $body .= "\n\nPágina " . ($page + 1) . "/" . $totalPages;
-        }
-        $body .= "\n\nToque numa opção ou envie o número.";
-
-        $quickReplies = $slice->map(function ($opt, $i) use ($offset) {
-            $number = $offset + $i + 1;
+        // Quick replies: chegam como message.quick_reply no webhook "messages"
+        $quickReplies = $options->take(13)->values()->map(function ($opt, $index) {
             $payload = !empty($opt->id)
                 ? 'opt:' . $opt->id
                 : (string) $opt->value;
 
             return [
                 'content_type' => 'text',
-                'title'        => (string) $number,
+                'title'        => (string) ($index + 1),
                 'payload'      => $payload,
             ];
-        })->values()->toArray();
-
-        if ($hasPrev) {
-            $quickReplies[] = [
-                'content_type' => 'text',
-                'title'        => '« Anterior',
-                'payload'      => 'page:' . ($page - 1),
-            ];
-        }
-
-        if ($hasNext) {
-            $quickReplies[] = [
-                'content_type' => 'text',
-                'title'        => 'Mais »',
-                'payload'      => 'page:' . ($page + 1),
-            ];
-        }
+        })->toArray();
 
         $this->messenger->sendQuickReplies($from, $body, $quickReplies);
     }
