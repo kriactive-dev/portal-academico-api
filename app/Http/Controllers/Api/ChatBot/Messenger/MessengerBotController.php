@@ -48,9 +48,9 @@ class MessengerBotController extends Controller
         );
 
         // Adiciona isto temporariamente no início do método handle()
-        Log::info('Raw body: ' . $request->getContent());
-        Log::info('Signature header: ' . $request->header('X-Hub-Signature-256'));
-        Log::info('App secret: ' . substr(config('services.messenger.app_secret'), 0, 6) . '...');
+        // Log::info('Raw body: ' . $request->getContent());
+        // Log::info('Signature header: ' . $request->header('X-Hub-Signature-256'));
+        // Log::info('App secret: ' . substr(config('services.messenger.app_secret'), 0, 6) . '...');
  
         // if (!hash_equals($expected, $signature ?? '')) {
         //     Log::warning('Messenger: assinatura inválida');
@@ -303,11 +303,12 @@ class MessengerBotController extends Controller
                 'subtitle' => 'Toque no botão para escolher',
                 'buttons'  => [[
                     'type'    => 'postback',
+                    'title'   => $numbered,
                     // 'title'   => $this->messenger->truncateTitle($label, 20),
                     'payload' => $opt->value,
 
                     // 'type'    => 'postback',
-                    'title'   => $numbered,
+                    
                     // 'payload' => $opt->value,
                 ]],
             ];
