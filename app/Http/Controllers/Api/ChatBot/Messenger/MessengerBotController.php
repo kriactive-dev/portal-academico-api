@@ -294,8 +294,9 @@ class MessengerBotController extends Controller
 
         $this->messenger->sendText($from, $question->text);
 
-        $elements = $options->take(10)->values()->map(function ($opt) {
+        $elements = $options->take(10)->values()->map(function ($opt, $index) {
             $label = $opt->label ?: $opt->value;
+            $numbered = ($index + 1);
 
             return [
                 'title'    => $this->messenger->truncateTitle($label, 80),
@@ -303,7 +304,8 @@ class MessengerBotController extends Controller
                 'buttons'  => [[
                     'type'    => 'postback',
                     'title'   => $this->messenger->truncateTitle($label, 20),
-                    'payload' => $opt->value,
+                    // 'payload' => $opt->value,
+                    'payload' => $numbered,
                 ]],
             ];
         })->toArray();
