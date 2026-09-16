@@ -39,30 +39,7 @@ class MessengerBotController extends Controller
     // ─────────────────────────────────────────────
     public function handle(Request $request)
     {
-        // DEBUG: o que o Facebook envia (ver storage/logs/laravel.log)
-        Log::info('Messenger webhook RAW', [
-            'raw_body' => $request->getContent(),
-            'json' => $request->all(),
-        ]);
-
-        // 1. Valida assinatura HMAC
-        $signature = $request->header('X-Hub-Signature-256');
-        $expected  = 'sha256=' . hash_hmac(
-            'sha256',
-            $request->getContent(),
-            config('services.messenger.app_secret')
-        );
-
-        // if (!hash_equals($expected, $signature ?? '')) {
-        //     Log::warning('Messenger: assinatura inválida');
-        //     return response('Forbidden', 403);
-        // }
-
-        // 2. Garante que é evento de página
         if ($request->input('object') !== 'page') {
-            Log::info('Messenger ignorado: object != page', [
-                'object' => $request->input('object'),
-            ]);
             return response()->json(['status' => 'ignored']);
         }
 
@@ -75,9 +52,7 @@ class MessengerBotController extends Controller
 
             return response()->json(['status' => 'ok']);
         } catch (\Throwable $e) {
-            Log::error('Messenger webhook erro: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('Messenger webhook erro: ' . $e->getMessage());
             return response()->json(['status' => 'error']);
         }
     }
@@ -86,7 +61,6 @@ class MessengerBotController extends Controller
     {
         $from = $messagingEvent['sender']['id'] ?? null;
         if (!$from) {
-            Log::info('Messenger evento sem sender', ['event' => $messagingEvent]);
             return;
         }
 
@@ -94,25 +68,12 @@ class MessengerBotController extends Controller
             return;
         }
 
-        $sessionQuestionId = Cache::get("msng_question_$from");
-        $optionMap = Cache::get("msng_option_map_$from");
-
-        // ── Postback (se messaging_postbacks estiver activo) ────────────
         if (isset($messagingEvent['postback'])) {
             $payload = (string) ($messagingEvent['postback']['payload'] ?? '');
-
-            Log::info('Messenger POSTBACK', [
-                'from' => $from,
-                'payload' => $payload,
-                'session_question_id' => $sessionQuestionId,
-                'option_map' => $optionMap,
-            ]);
-
             $this->processPayload($from, $payload);
             return;
         }
 
-        // ── Mensagem de texto / quick_reply ─────────────────────────────
         if (isset($messagingEvent['message'])) {
             if (!empty($messagingEvent['message']['is_echo'])) {
                 return;
@@ -120,34 +81,14 @@ class MessengerBotController extends Controller
 
             $text = (string) ($messagingEvent['message']['text'] ?? '');
 
-            // Quick replies vêm no webhook "messages" (não precisam de postbacks)
             if (isset($messagingEvent['message']['quick_reply'])) {
                 $payload = (string) ($messagingEvent['message']['quick_reply']['payload'] ?? '');
-                Log::info('Messenger QUICK_REPLY', [
-                    'from' => $from,
-                    'payload' => $payload,
-                    'text' => $text,
-                    'session_question_id' => $sessionQuestionId,
-                ]);
                 $this->processPayload($from, $payload);
                 return;
             }
 
-            Log::info('Messenger TEXTO', [
-                'from' => $from,
-                'text' => $text,
-                'session_question_id' => $sessionQuestionId,
-                'option_map' => $optionMap,
-            ]);
-
             $this->processText($from, $text);
-            return;
         }
-
-        Log::info('Messenger evento desconhecido', [
-            'from' => $from,
-            'keys' => array_keys($messagingEvent),
-        ]);
     }
  
     // ─────────────────────────────────────────────
@@ -259,10 +200,6 @@ class MessengerBotController extends Controller
             return $this->advanceQuestion($from, $question, $option);
         }
 
-        Log::warning('Messenger opção não reconhecida', [
-            'from' => $from,
-            'question_id' => $question->id,
-        ]);
         $this->sendDynamicQuestion($from, $question, (int) Cache::get("msng_page_$from", 0));
         return response()->json(['status' => 'invalid_option']);
     }
