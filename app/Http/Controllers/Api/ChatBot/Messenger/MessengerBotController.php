@@ -292,34 +292,23 @@ class MessengerBotController extends Controller
             return;
         }
 
-        $lines = $options->values()->map(
-            fn ($opt, $i) => ($i + 1) . '. ' . $opt->label
-        )->implode("\n");
-        $body = $question->text . "\n\n" . $lines;
+        $this->messenger->sendText($from, $question->text);
 
-        if ($question->type === 'button' && $count <= 3) {
-            $buttons = $options->values()->map(fn ($opt, $i) => [
-                'type'    => 'postback',
-                'title'   => (string) ($i + 1),
-                'payload' => $opt->value,
-            ])->toArray();
+        $elements = $options->take(10)->values()->map(function ($opt) {
+            $label = $opt->label ?: $opt->value;
 
-            $this->messenger->sendButtons($from, $body, $buttons);
-            return;
-        }
+            return [
+                'title'    => $this->messenger->truncateTitle($label, 80),
+                'subtitle' => 'Toque no botão para escolher',
+                'buttons'  => [[
+                    'type'    => 'postback',
+                    'title'   => $this->messenger->truncateTitle($label, 20),
+                    'payload' => $opt->value,
+                ]],
+            ];
+        })->toArray();
 
-        if ($count <= 13) {
-            $quickReplies = $options->values()->map(fn ($opt, $i) => [
-                'content_type' => 'text',
-                'title'        => (string) ($i + 1),
-                'payload'      => $opt->value,
-            ])->toArray();
-
-            $this->messenger->sendQuickReplies($from, $body, $quickReplies);
-            return;
-        }
-
-        $this->messenger->sendText($from, $body . "\n\nResponda com o número da opção.");
+        $this->messenger->sendGenericTemplate($from, $elements);
     }
 
     private function getQuestionOptions(QuestionBot $question)
@@ -353,8 +342,13 @@ class MessengerBotController extends Controller
         }
 
         return $options->first(function ($opt) use ($normalized) {
-            return mb_strtolower((string) $opt->value) === $normalized
-                || mb_strtolower((string) $opt->label) === $normalized;
+            $label = mb_strtolower((string) $opt->label);
+            $value = mb_strtolower((string) $opt->value);
+            $buttonTitle = mb_strtolower($this->messenger->truncateTitle((string) ($opt->label ?: $opt->value), 20));
+
+            return $value === $normalized
+                || $label === $normalized
+                || $buttonTitle === $normalized;
         });
     }
 
