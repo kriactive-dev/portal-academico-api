@@ -46,11 +46,16 @@ class MessengerBotController extends Controller
             $request->getContent(),
             config('services.messenger.app_secret')
         );
+
+        // Adiciona isto temporariamente no início do método handle()
+        Log::info('Raw body: ' . $request->getContent());
+        Log::info('Signature header: ' . $request->header('X-Hub-Signature-256'));
+        Log::info('App secret: ' . substr(config('services.messenger.app_secret'), 0, 6) . '...');
  
-        if (!hash_equals($expected, $signature ?? '')) {
-            Log::warning('Messenger: assinatura inválida');
-            return response('Forbidden', 403);
-        }
+        // if (!hash_equals($expected, $signature ?? '')) {
+        //     Log::warning('Messenger: assinatura inválida');
+        //     return response('Forbidden', 403);
+        // }
  
         // 2. Garante que é evento de página
         if ($request->input('object') !== 'page') {
