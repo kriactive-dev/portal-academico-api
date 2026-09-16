@@ -136,9 +136,9 @@ class MessengerBotController extends Controller
             return $this->advanceQuestion($from, $question, $question->options->first());
         }
 
-        // Pergunta com opções: aceita número da lista, valor ou texto do botão
+        // Pergunta com opções: aceita número, value, label ou texto do botão
         if ($question) {
-            $option = $this->resolveOptionFromText($question, $text);
+            $option = $this->resolveOptionFromPayload($question, $text);
             if ($option && $option->value === 'voltar') {
                 return $this->goBack($from);
             }
@@ -186,13 +186,17 @@ class MessengerBotController extends Controller
             return $this->goBack($from);
         }
  
-        // Opção do QuestionBot
-        if ($question && $payload) {
-            $option = OptionBot::where('question_bot_id', $question->id)
-                ->where('value', $payload)
-                ->first();
- 
-            return $this->advanceQuestion($from, $question, $option);
+        // Opção do QuestionBot (value, número ou label)
+        if ($question && $payload !== '') {
+            $option = $this->resolveOptionFromPayload($question, $payload);
+
+            if ($option && $option->value === 'voltar') {
+                return $this->goBack($from);
+            }
+
+            if ($option) {
+                return $this->advanceQuestion($from, $question, $option);
+            }
         }
  
         return response()->json(['status' => 'unknown_payload']);
@@ -294,22 +298,16 @@ class MessengerBotController extends Controller
 
         $this->messenger->sendText($from, $question->text);
 
-        $elements = $options->take(10)->values()->map(function ($opt, $index) {
+        $elements = $options->take(10)->values()->map(function ($opt) {
             $label = $opt->label ?: $opt->value;
-            $numbered = ($index + 1);
 
             return [
                 'title'    => $this->messenger->truncateTitle($label, 80),
                 'subtitle' => 'Toque no botão para escolher',
                 'buttons'  => [[
                     'type'    => 'postback',
-                    // 'title'   => $numbered,
                     'title'   => $this->messenger->truncateTitle($label, 20),
-                    'payload' => $numbered,
-
-                    // 'type'    => 'postback',
-                    
-                    // 'payload' => $opt->value,
+                    'payload' => (string) $opt->value,
                 ]],
             ];
         })->toArray();
@@ -331,9 +329,9 @@ class MessengerBotController extends Controller
         return $options;
     }
 
-    private function resolveOptionFromText(QuestionBot $question, string $text): ?OptionBot
+    private function resolveOptionFromPayload(QuestionBot $question, string $input): ?OptionBot
     {
-        $normalized = mb_strtolower(trim($text));
+        $normalized = mb_strtolower(trim($input));
         if ($normalized === '') {
             return null;
         }
@@ -342,6 +340,13 @@ class MessengerBotController extends Controller
 
         if (preg_match('/^\d+$/', $normalized)) {
             $index = ((int) $normalized) - 1;
+            if (isset($options[$index])) {
+                return $options[$index];
+            }
+        }
+
+        if (preg_match('/^(\d+)\.\s*(.+)$/', $normalized, $matches)) {
+            $index = ((int) $matches[1]) - 1;
             if (isset($options[$index])) {
                 return $options[$index];
             }
