@@ -91,76 +91,54 @@ class MessengerBotController extends Controller
         }
 
         if (isset($messagingEvent['delivery']) || isset($messagingEvent['read'])) {
-            Log::info('Messenger delivery/read ignorado', [
-                'from' => $from,
-                'keys' => array_keys($messagingEvent),
-            ]);
             return;
         }
 
         $sessionQuestionId = Cache::get("msng_question_$from");
         $optionMap = Cache::get("msng_option_map_$from");
 
-        // ── Postback (botões do carrossel / Get Started) ────────────
+        // ── Postback (se messaging_postbacks estiver activo) ────────────
         if (isset($messagingEvent['postback'])) {
             $payload = (string) ($messagingEvent['postback']['payload'] ?? '');
-            $title = (string) ($messagingEvent['postback']['title'] ?? '');
 
-            Log::info('Messenger POSTBACK detalhe', [
+            Log::info('Messenger POSTBACK', [
                 'from' => $from,
                 'payload' => $payload,
-                'title' => $title,
                 'session_question_id' => $sessionQuestionId,
                 'option_map' => $optionMap,
-                'postback' => $messagingEvent['postback'],
             ]);
-
-            // DEBUG visível no chat (temporário)
-            $this->messenger->sendText(
-                $from,
-                "[DEBUG postback]\npayload: {$payload}\ntitle: {$title}\nsessão: " . ($sessionQuestionId ?: 'nenhuma')
-            );
 
             $this->processPayload($from, $payload);
             return;
         }
 
-        // ── Mensagem de texto ──────────────────────────────────────
+        // ── Mensagem de texto / quick_reply ─────────────────────────────
         if (isset($messagingEvent['message'])) {
             if (!empty($messagingEvent['message']['is_echo'])) {
-                Log::info('Messenger echo ignorado', ['from' => $from]);
                 return;
             }
 
             $text = (string) ($messagingEvent['message']['text'] ?? '');
 
+            // Quick replies vêm no webhook "messages" (não precisam de postbacks)
             if (isset($messagingEvent['message']['quick_reply'])) {
                 $payload = (string) ($messagingEvent['message']['quick_reply']['payload'] ?? '');
                 Log::info('Messenger QUICK_REPLY', [
                     'from' => $from,
                     'payload' => $payload,
+                    'text' => $text,
                     'session_question_id' => $sessionQuestionId,
                 ]);
-                $this->messenger->sendText($from, "[DEBUG quick_reply]\npayload: {$payload}");
                 $this->processPayload($from, $payload);
                 return;
             }
 
-            Log::info('Messenger TEXTO detalhe', [
+            Log::info('Messenger TEXTO', [
                 'from' => $from,
                 'text' => $text,
-                'text_hex' => bin2hex($text),
                 'session_question_id' => $sessionQuestionId,
                 'option_map' => $optionMap,
-                'message' => $messagingEvent['message'],
             ]);
-
-            // DEBUG visível no chat (temporário)
-            $this->messenger->sendText(
-                $from,
-                "[DEBUG texto]\nrecebido: \"{$text}\"\nsessão: " . ($sessionQuestionId ?: 'nenhuma') .
-                "\nmapa: " . json_encode($optionMap ?: new \stdClass())
-            );
 
             $this->processText($from, $text);
             return;
@@ -169,7 +147,6 @@ class MessengerBotController extends Controller
         Log::info('Messenger evento desconhecido', [
             'from' => $from,
             'keys' => array_keys($messagingEvent),
-            'event' => $messagingEvent,
         ]);
     }
  
@@ -313,8 +290,8 @@ class MessengerBotController extends Controller
         if ($previousId) {
             $prev = QuestionBot::with('options')->find($previousId);
             $this->sendDynamicQuestion($from, $prev);
-            Cache::put("msng_question_$from", $previousId, now()->addMinutes(10));
-            Cache::put("msng_history_$from", $history, now()->addMinutes(10));
+            Cache::put("msng_question_$from", $previousId, now()->addMinutes(30));
+            Cache::put("msng_history_$from", $history, now()->addMinutes(30));
         } else {
             $this->messenger->sendText($from, "Olá! Digite 'ajuda' para receber opções.");
             Cache::forget("msng_question_$from");
@@ -384,30 +361,30 @@ class MessengerBotController extends Controller
         foreach ($options as $index => $opt) {
             $map[$index + 1] = !empty($opt->id) ? (int) $opt->id : (string) $opt->value;
         }
-        Cache::put("msng_option_map_$from", $map, now()->addMinutes(10));
+        Cache::put("msng_option_map_$from", $map, now()->addMinutes(30));
 
-        $this->messenger->sendText($from, $question->text);
+        // Lista vertical em texto (o carrossel usa postback e o teu webhook
+        // não está a receber messaging_postbacks — só "messages")
+        $lines = $options->map(
+            fn ($opt, $index) => ($index + 1) . '. ' . ($opt->label ?: $opt->value)
+        )->implode("\n");
 
-        $elements = $options->take(10)->map(function ($opt, $index) {
-            $label = $opt->label ?: $opt->value;
-            $number = (string) ($index + 1);
+        $body = $question->text . "\n\n" . $lines . "\n\nToque numa opção ou envie o número.";
 
+        // Quick replies: chegam como message.quick_reply no webhook "messages"
+        $quickReplies = $options->take(13)->values()->map(function ($opt, $index) {
             $payload = !empty($opt->id)
                 ? 'opt:' . $opt->id
                 : (string) $opt->value;
 
             return [
-                'title'    => $this->messenger->truncateTitle($label, 80),
-                'subtitle' => 'Opção ' . $number . ' — toque para escolher',
-                'buttons'  => [[
-                    'type'    => 'postback',
-                    'title'   => $number,
-                    'payload' => $payload,
-                ]],
+                'content_type' => 'text',
+                'title'        => (string) ($index + 1),
+                'payload'      => $payload,
             ];
-        })->values()->toArray();
+        })->toArray();
 
-        $this->messenger->sendGenericTemplate($from, $elements);
+        $this->messenger->sendQuickReplies($from, $body, $quickReplies);
     }
 
     private function getQuestionOptions(QuestionBot $question)
@@ -535,7 +512,7 @@ class MessengerBotController extends Controller
  
     private function saveHistory(string $from, int $questionId, array $history): void
     {
-        Cache::put("msng_question_$from", $questionId, now()->addMinutes(10));
-        Cache::put("msng_history_$from", $history, now()->addMinutes(10));
+        Cache::put("msng_question_$from", $questionId, now()->addMinutes(30));
+        Cache::put("msng_history_$from", $history, now()->addMinutes(30));
     }
 }
